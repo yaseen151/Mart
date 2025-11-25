@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Product Page Layout */
+        .product-detail {
+            display: flex; gap: 3rem; background: var(--card-white); padding: 3rem;
+            border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 2rem;
+        }
+        .product-img { flex: 1; }
+        .product-img img { width: 100%; border-radius: 15px; object-fit: contain; max-height: 500px; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .product-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--primary-dark); margin-bottom: 5px; }
+        .price { font-size: 2.5rem; color: var(--accent-orange); font-weight: bold; margin: 1rem 0; font-family: 'Poppins', sans-serif; }
+        .desc { line-height: 1.8; color: #666; margin-bottom: 2rem; font-size: 1.05rem; }
+
+        /* --- REVIEWS SECTION --- */
+        .reviews-container { margin-top: 4rem; background: var(--card-white); padding: 30px; border-radius: 20px; box-shadow: var(--shadow); }
+        .review-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .review-card { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee; }
+        .stars { color: gold; font-size: 1.2rem; }
+        
+        /* Review Form */
+        .review-form { background: var(--input-bg); padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+        .rating-select { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .star-btn { font-size: 1.5rem; cursor: pointer; color: #ccc; transition: 0.2s; }
+        .star-btn.active { color: gold; }
+
+        @media (max-width: 768px) { .product-detail { flex-direction: column; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
+            <div class="logo-text">Shop<span>Mart</span></div>
+        </a>
+        <nav id="nav-actions"></nav>
+    </header>
+
+    <div class="container">
+        <div id="detail-container"><p style="text-align:center; margin-top:50px;">Loading...</p></div>
+
+        <div class="reviews-container">
+            <div class="review-header">
+                <h2 class="section-title" style="margin:0; text-align:left;">Customer Reviews</h2>
+                <div id="avg-rating" style="font-size:1.5rem; font-weight:bold; color:var(--primary-dark);">
+                    ⭐ 0.0 <span style="font-size:0.9rem; color:#666;">(0 Reviews)</span>
+                </div>
+            </div>
+
+            <div class="review-form">
+                <h3 style="margin-bottom:10px;">Leave a Review</h3>
+                <div class="rating-select" id="star-selector">
+                    <span>Rating:</span>
+                    <span class="star-btn" onclick="setRating(1)">★</span>
+                    <span class="star-btn" onclick="setRating(2)">★</span>
+                    <span class="star-btn" onclick="setRating(3)">★</span>
+                    <span class="star-btn" onclick="setRating(4)">★</span>
+                    <span class="star-btn" onclick="setRating(5)">★</span>
+                </div>
+                <textarea id="review-text" placeholder="Write your experience..." style="height:80px;"></textarea>
+                <button class="btn" onclick="submitReview()">Submit Review</button>
+            </div>
+
+            <div id="reviews-list">
+                <p style="color:#777;">No reviews yet. Be the first!</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 4rem;">
+            <h2 class="section-title">You Might Also Like</h2>
+            <div id="related-grid" class="product-grid"><p style="color:#777;">Loading...</p></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <a href="#" class="logo"><div class="logo-text">Shop<span>Mart</span></div></a>
+                <p style="font-size:0.9rem; opacity:0.8;">Curated vintage aesthetics.</p>
+            </div>
+            <div class="footer-col"><h4>Contact</h4><a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange);">✉️ me.junaid.in@gmail.com</a></div>
+        </div>
+        <div class="footer-bottom">&copy; 2025 ShopMart Inc.</div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentProductId = null;
+        let selectedRating = 0;
+
+        async function loadProductDetail() {
+            const params = new URLSearchParams(window.location.search);
+            currentProductId = params.get('id');
+            if (!currentProductId) { window.location.href = 'index.html'; return; }
+
+            const res = await apiFetch(`/products/${currentProductId}`);
+            if (!res.ok) { document.getElementById('detail-container').innerHTML = '<h2>Product not found</h2>'; return; }
+            const p = await res.json();
+            
+            let imgSrc = p.image.startsWith('http') ? p.image : `/uploads/${p.image}`;
+
+            document.getElementById('detail-container').innerHTML = `
+                <div class="product-detail">
+                    <div class="product-img"><img src="${imgSrc}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/500'"></div>
+                    <div class="product-info">
+                        <h1>${p.title}</h1>
+                        <p style="color:#888; font-size:0.9rem; text-transform:uppercase;">${p.category || 'Vintage'}</p>
+                        <div class="price">₹${p.price}</div>
+                        <p class="desc">${p.description || 'No description.'}</p>
+                        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                            <button class="btn" style="flex:1; background:#023E36;" onclick="buyNow(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Buy Now</button>
+                            <button class="btn" style="flex:1;" onclick="addToCart(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Add to Cart</button>
+                            <button class="btn" style="flex:1; background:transparent; border:2px solid var(--accent-orange); color:var(--accent-orange);" onclick="makeOffer(${p.id}, '${p.title}')">Make Offer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadRelatedProducts(p.category, p.id);
+            loadReviews(p.id);
+        }
+
+        // --- REVIEW LOGIC ---
+        function setRating(n) {
+            selectedRating = n;
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach((s, index) => {
+                s.classList.toggle('active', index < n);
+            });
+        }
+
+        async function submitReview() {
+            if(!getToken()) return alert("Please login to review.");
+            if(selectedRating === 0) return alert("Please select a star rating.");
+            
+            const comment = document.getElementById('review-text').value;
+            
+            const res = await apiFetch('/reviews', {
+                method: 'POST',
+                body: JSON.stringify({ product_id: currentProductId, rating: selectedRating, comment })
+            });
+
+            if(res.ok) {
+                alert("Review Submitted!");
+                document.getElementById('review-text').value = '';
+                setRating(0);
+                loadReviews(currentProductId);
+            } else {
+                alert("Error submitting review.");
+            }
+        }
+
+        async function loadReviews(id) {
+            const res = await apiFetch(`/reviews/${id}`);
+            const reviews = await res.json();
+            const container = document.getElementById('reviews-list');
+            const avgContainer = document.getElementById('avg-rating');
+
+            if(reviews.length === 0) {
+                container.innerHTML = '<p style="color:#777;">No reviews yet. Be the first!</p>';
+                avgContainer.innerHTML = '⭐ 0.0 <span style="font-size:0.9rem; color:#666;">(0 Reviews)</span>';
+                return;
+            }
+
+            // Calculate Average
+            const totalStars = reviews.reduce((acc, r) => acc + r.rating, 0);
+            const avg = (totalStars / reviews.length).toFixed(1);
+            avgContainer.innerHTML = `⭐ ${avg} <span style="font-size:0.9rem; color:#666;">(${reviews.length} Reviews)</span>`;
+
+            container.innerHTML = reviews.map(r => `
+                <div class="review-card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <strong>${r.user_name}</strong>
+                        <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+                    </div>
+                    <p style="margin:0; color:#555;">${r.comment}</p>
+                    <small style="color:#999;">${new Date(r.created_at).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+        }
+
+        // --- RELATED PRODUCTS ---
+        async function loadRelatedProducts(category, currentId) {
+            if(!category) category = 'General';
+            const res = await apiFetch(`/products?category=${category}`);
+            const allProducts = await res.json();
+            const related = allProducts.filter(item => item.id !== currentId).slice(0, 4);
+            const container = document.getElementById('related-grid');
+            if (related.length === 0) { container.innerHTML = '<p style="color:#777;">No related products.</p>'; return; }
+            container.innerHTML = related.map(p => {
+                let img = p.image.startsWith('http') ? p.image : `/uploads/${p.image}`;
+                return `<div class="card" onclick="window.location.href='product.html?id=${p.id}'" style="cursor:pointer;"><img src="${img}" class="product-img-fix"><div class="card-body"><h4 class="card-title" style="font-size:1rem;">${p.title}</h4><p class="card-price" style="font-size:1.1rem;">₹${p.price}</p></div></div>`;
+            }).join('');
+        }
+
+        loadProductDetail();
+    </script>
+</body>
+</html>

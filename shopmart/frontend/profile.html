@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Profile | ShopMart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* ... (Keep existing styles) ... */
+        .order-card { background: var(--bg-card); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .order-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: bold; font-size: 1.2rem; }
+        .order-status { background: #eefbf0; color: green; padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; border: 1px solid green; }
+        .order-item { display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin: 10px 0; align-items: center; }
+        .order-total { text-align: right; font-weight: bold; color: var(--primary-dark); font-size: 1.3rem; margin-top: 20px; padding-top: 10px; border-top: 2px solid #eee; }
+        .btn-download { background-color: var(--accent-orange); color: white; padding: 10px 25px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(244, 157, 55, 0.3); transition: transform 0.2s; font-size: 0.9rem; display: inline-block; }
+        .btn-download:hover { transform: translateY(-2px); background-color: #e08e2e; }
+        .btn-container { text-align: center; margin-top: 20px; }
+
+        /* --- PASSWORD MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 20000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: var(--bg-card); padding: 30px; border-radius: 20px;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border-color);
+        }
+        .modal-box input { margin-bottom: 15px; }
+        .modal-box h3 { font-family: 'Playfair Display'; color: var(--primary-dark); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
+            <div class="logo-text">Shop<span>Mart</span></div>
+        </a>
+        <nav id="nav-actions"></nav>
+    </header>
+
+    <div class="container">
+        
+        <div class="form-box">
+            <h2 style="font-family:'Playfair Display'; color:var(--primary-dark); margin-bottom:20px;">My Profile</h2>
+            <div style="text-align:center; margin: 20px 0;">
+                <img id="profile-dp" src="" alt="DP" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border: 3px solid var(--accent-orange);">
+            </div>
+            <form id="profile-form">
+                <label style="display:block; margin-bottom:5px; color:#666;">Change Photo</label>
+                <input type="file" id="dp-input">
+                <input type="text" id="name" placeholder="Name">
+                <input type="email" id="email" placeholder="Email" disabled style="background:#eee; cursor:not-allowed;">
+                
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" class="btn" style="flex:1;">Update Profile</button>
+                    <button type="button" class="btn" style="flex:1; background:var(--primary-dark);" onclick="openPassModal()">Change Password</button>
+                </div>
+            </form>
+        </div>
+
+        <div style="max-width: 600px; margin: 3rem auto;">
+            <h2 class="section-heading">My Offers</h2>
+            <div id="my-offers-list"><p style="text-align:center;">Loading offers...</p></div>
+        </div>
+
+        <hr style="border:0; border-top:2px solid #eee; max-width:600px; margin:0 auto;">
+
+        <div style="max-width: 600px; margin: 3rem auto;">
+            <h2 class="section-heading">Order History</h2>
+            <div id="order-list"><p style="text-align:center;">Loading orders...</p></div>
+        </div>
+    </div>
+
+    <div id="pass-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Change Password</h3>
+            <input type="password" id="old-pass" placeholder="Current Password">
+            <input type="password" id="new-pass" placeholder="New Password">
+            <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="submitPasswordChange()">Save</button>
+                <button class="btn" style="background:#666;" onclick="closePassModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <a href="#" class="logo" style="margin-bottom:15px;">
+                    <div class="logo-text">Shop<span>Mart</span></div>
+                </a>
+                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7); line-height:1.6;">
+                    Curated vintage aesthetics for the modern world.
+                </p>
+            </div>
+            <div class="footer-col"><h4>Contact Us</h4><a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold;">✉️ me.junaid.in@gmail.com</a></div>
+        </div>
+        <div class="footer-bottom">&copy; 2025 ShopMart Inc. | Built by Junaid</div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        if(!getToken()) window.location.href = 'login.html';
+
+        // --- PASSWORD MODAL LOGIC ---
+        function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; }
+        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
+
+        async function submitPasswordChange() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+
+            if(!oldPass || !newPass) return alert("Please fill all fields.");
+
+            const res = await apiFetch('/auth/change-password', {
+                method: 'PUT',
+                body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
+            });
+
+            const data = await res.json();
+            if(res.ok) {
+                alert("✅ Password Changed Successfully!");
+                closePassModal();
+            } else {
+                alert("❌ " + data.message);
+            }
+        }
+
+        // --- EXISTING LOGIC ---
+        async function loadProfile() {
+            const res = await apiFetch('/auth/profile');
+            const user = await res.json();
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('profile-dp').src = user.dp ? `/uploads/${user.dp}` : 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+        }
+
+        async function loadMyOffers() {
+            const res = await apiFetch('/offers/my');
+            const offers = await res.json();
+            const container = document.getElementById('my-offers-list');
+            if(offers.length === 0) { container.innerHTML = '<p style="text-align:center; color:#777;">You haven\'t made any offers.</p>'; return; }
+            container.innerHTML = offers.map(o => {
+                let color = o.status === 'accepted' ? 'green' : (o.status === 'rejected' ? 'red' : 'orange');
+                return `<div class="order-card" style="flex-direction:row; justify-content:space-between; padding:15px; margin-bottom:15px; display:flex; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img src="/uploads/${o.image}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;">
+                        <div><h4 style="margin:0;">${o.title}</h4><p style="font-weight:bold; color:var(--accent-orange); margin:5px 0 0 0;">My Offer: ₹${o.offer_price}</p></div>
+                    </div>
+                    <div style="text-align:right;"><span style="background:${color}; color:white; padding:5px 15px; border-radius:50px; font-size:0.8rem; text-transform:capitalize; font-weight:bold;">${o.status}</span></div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadOrders() {
+            const res = await apiFetch('/orders');
+            if (!res.ok) { document.getElementById('order-list').innerHTML = '<p>No orders found.</p>'; return; }
+            const orders = await res.json();
+            const container = document.getElementById('order-list');
+            if (orders.length === 0) { container.innerHTML = '<p style="text-align:center; color:#777;">You haven\'t placed any orders yet.</p>'; return; }
+            window.myOrders = orders;
+
+            container.innerHTML = orders.map(order => {
+                const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                const itemsHtml = items.map(i => `<div class="order-item"><div style="display:flex; align-items:center; gap:10px;"><img src="/uploads/${i.image}" style="width:40px; height:40px; object-fit:cover; border-radius:5px;"><span>${i.qty}x ${i.title}</span></div><span>₹${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
+                return `<div class="order-card" id="invoice-${order.id}">
+                        <div class="order-header"><span>Order #${order.id}</span><span class="order-status">Paid</span></div>
+                        <div style="margin-bottom:15px; font-size:0.9rem; color:var(--text-muted); line-height:1.6;"><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br><strong>Shipping To:</strong> ${order.address}</div>
+                        <div style="background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #eee;">${itemsHtml}</div>
+                        <div class="order-total">Total: ₹${Number(order.total_price).toFixed(2)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            const fileInput = document.getElementById('dp-input');
+            if(fileInput.files[0]) formData.append('dp', fileInput.files[0]);
+            const res = await apiFetch('/auth/profile', { method: 'PUT', body: formData });
+            if(res.ok) {
+                alert('Profile Updated!');
+                const profileRes = await apiFetch('/auth/profile');
+                const freshUser = await profileRes.json();
+                localStorage.setItem('user', JSON.stringify(freshUser));
+                location.reload();
+            } else { alert('Error updating profile'); }
+        });
+
+        loadProfile();
+        loadMyOffers();
+        loadOrders();
+    </script>
+</body>
+</html>

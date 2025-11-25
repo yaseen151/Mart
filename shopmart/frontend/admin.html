@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ShopMart | Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Edit Mode Highlight */
+        .editing-mode {
+            border: 2px solid var(--accent-orange);
+            background-color: #fffdf5 !important;
+        }
+        .edit-preview-img {
+            width: 80px; height: 80px; object-fit: cover;
+            border-radius: 10px; border: 1px solid #ddd;
+            display: block; margin-top: 10px;
+        }
+        /* Welcome Banner Style */
+        .welcome-banner {
+            background: linear-gradient(135deg, #023E36, #035e52);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(2, 62, 54, 0.2);
+            text-align: center;
+        }
+        .welcome-banner h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .welcome-banner p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
+            <div class="logo-text">Shop<span>Mart</span> Admin</div>
+        </a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        
+        <div id="admin-welcome" class="welcome-banner"></div>
+
+        <div style="margin-top: 2rem;">
+            <h2 class="section-heading">Dashboard Overview</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                
+                <div class="card" style="text-align:center; border-left: 5px solid green;">
+                    <h3 style="font-size:0.9rem; color:#666;">Revenue</h3>
+                    <p id="stat-revenue" style="font-size:1.8rem; font-weight:bold; color:var(--primary-dark); margin:10px 0;">₹0</p>
+                </div>
+                
+                <div class="card" style="text-align:center; border-left: 5px solid var(--accent-orange);">
+                    <h3 style="font-size:0.9rem; color:#666;">Orders</h3>
+                    <p id="stat-orders" style="font-size:1.8rem; font-weight:bold; color:var(--primary-dark); margin:10px 0;">0</p>
+                </div>
+
+                <div class="card" style="text-align:center; border-left: 5px solid blue;">
+                    <h3 style="font-size:0.9rem; color:#666;">Users</h3>
+                    <div style="display:flex; justify-content:center; gap:15px; align-items:center;">
+                        <div>
+                            <span style="font-size:0.8rem; color:#666;">Total</span>
+                            <p id="stat-users" style="font-size:1.5rem; font-weight:bold; color:var(--primary-dark); margin:0;">0</p>
+                        </div>
+                        <div style="border-left:1px solid #ccc; height:30px;"></div>
+                        <div>
+                            <span style="font-size:0.8rem; color:green; font-weight:bold;">● Online</span>
+                            <p id="stat-active" style="font-size:1.5rem; font-weight:bold; color:green; margin:0;">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div style="background: #fff3cd; padding: 20px; border-radius: 15px; border: 1px solid #ffeeba;">
+                <h3 style="font-size:1.2rem; text-align:center; color:#856404; margin-bottom:15px;">🔔 Recent Orders</h3>
+                <div id="all-orders-list" style="display:grid; gap:15px;"><p style="text-align:center;">Loading...</p></div>
+            </div>
+            
+            <div class="card">
+                <h3 style="font-size:1.2rem; text-align:center; margin-bottom:15px;">Offer Inbox</h3>
+                <div id="offer-list" style="display:grid; gap:10px;"><p style="text-align:center;">Loading...</p></div>
+            </div>
+        </div>
+
+        <hr style="border:0; border-top:2px solid #eee; margin: 3rem 0;">
+
+        <div style="max-width: 100%; margin: 2rem auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee;">
+            <h2 class="section-heading" style="text-align:left; margin-bottom:15px;">User Management 👮</h2>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f4f4f4; text-align:left;">
+                            <th style="padding:12px; border-radius:8px 0 0 8px;">Name</th>
+                            <th style="padding:12px;">Email</th>
+                            <th style="padding:12px;">Status</th>
+                            <th style="padding:12px; border-radius:0 8px 8px 0;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <tr><td colspan="4" style="text-align:center; padding:20px;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <hr style="border:0; border-top:2px solid #eee; margin: 3rem 0;">
+
+        <div id="form-container" class="form-box" style="max-width:700px; transition:0.3s;">
+            <h2 id="form-title" style="font-family:'Playfair Display'; color:var(--primary-dark); text-align:center; margin-bottom:20px;">Add New Product</h2>
+            
+            <form id="product-form">
+                <input type="hidden" id="edit-id">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div><label>Title</label><input type="text" id="p-title" required></div>
+                    <div>
+                        <label>Category</label>
+                        <select id="p-category" required>
+                            <option value="General">General</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Fashion">Fashion</option>
+                            <option value="Vintage">Vintage</option>
+                            <option value="Home">Home</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label>Description</label>
+                <textarea id="p-desc" required style="height:80px;"></textarea>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div><label>Price (₹)</label><input type="number" id="p-price" step="0.01" required></div>
+                    <div><label>Stock</label><input type="number" id="p-stock" required></div>
+                </div>
+
+                <div>
+                    <label>Product Image</label>
+                    <input type="file" id="p-image" accept="image/*" style="background:white;">
+                    <div id="image-preview-container" style="display:none;">
+                        <p style="font-size:0.8rem; color:green; margin:5px 0;">Current Image:</p>
+                        <img id="preview-img" class="edit-preview-img" src="">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:25px;">
+                    <button type="submit" class="btn" id="submit-btn" style="flex:1;">ADD PRODUCT</button>
+                    <button type="button" class="btn" id="cancel-btn" style="background:#666; display:none; flex:1;" onclick="exitEditMode()">CANCEL</button>
+                </div>
+            </form>
+        </div>
+
+        <h2 class="section-heading" style="margin-top:4rem;">Manage Inventory</h2>
+        <div id="admin-products" class="product-grid"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        if (!getUser() || !getUser().isAdmin) window.location.href = 'index.html';
+
+        let allProducts = []; 
+
+        // --- WELCOME MSG ---
+        function setWelcomeMessage() {
+            const user = getUser();
+            const hour = new Date().getHours();
+            let greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+            document.getElementById('admin-welcome').innerHTML = `<h1>${greeting}, ${user.name.split(' ')[0]}! 🌟</h1><p>Here is what's happening in your store today.</p>`;
+        }
+        setWelcomeMessage();
+
+        // --- LOAD ALL DATA ---
+        async function loadData() {
+            // 1. Stats (Including Active Users)
+            const statRes = await apiFetch('/stats');
+            if(statRes.ok) {
+                const data = await statRes.json();
+                document.getElementById('stat-revenue').innerText = '₹' + Number(data.revenue).toFixed(0);
+                document.getElementById('stat-orders').innerText = data.total_orders;
+                document.getElementById('stat-users').innerText = data.total_users;
+                document.getElementById('stat-active').innerText = data.active_now; // <--- Shows Online Users
+            }
+
+            // 2. Users (Table)
+            loadUsers();
+
+            // 3. Inventory
+            const res = await apiFetch('/products');
+            if(res.ok) {
+                allProducts = await res.json();
+                const container = document.getElementById('admin-products');
+                container.innerHTML = allProducts.length ? allProducts.map(p => `
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="display:flex; justify-content:space-between;">
+                                <h4 style="margin:0;">${p.title}</h4>
+                                <small style="color:#999;">#${p.id}</small>
+                            </div>
+                            <p style="font-size:0.8rem; color:#666; text-transform:uppercase; margin:5px 0;">${p.category || 'General'}</p>
+                            <p style="color:var(--accent-orange); font-weight:bold;">₹${p.price}</p>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button class="btn" style="background:#333; padding:5px 10px; flex:1;" onclick="enterEditMode(${p.id})">EDIT</button>
+                                <button class="btn" style="background:red; padding:5px 10px; flex:1;" onclick="deleteProduct(${p.id})">DELETE</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : '<p style="text-align:center;">No products.</p>';
+            }
+
+            // 4. Orders
+            const orderRes = await apiFetch('/orders/admin');
+            const orders = await orderRes.json();
+            document.getElementById('all-orders-list').innerHTML = orders.length ? 
+                orders.map(o => {
+                    let statusColor = o.status === 'Shipped' ? 'blue' : (o.status === 'Delivered' ? 'green' : 'orange');
+                    return `<div class="card" style="padding:15px; border-left:5px solid ${statusColor}; background:white; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between;"><strong>Order #${o.id}</strong><small>${new Date(o.created_at).toLocaleDateString()}</small></div>
+                        <p style="margin:5px 0; font-size:0.9rem;"><strong>${o.user_name}</strong> (${o.email})</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:var(--primary-dark);">₹${o.total_price}</strong>
+                            <select onchange="updateStatus(${o.id}, this.value)" style="padding:5px; cursor:pointer;">
+                                <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>🚚 Shipped</option>
+                                <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
+                                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                            </select>
+                        </div>
+                    </div>`}).join('') : '<p style="text-align:center;">No orders.</p>';
+
+            // 5. Offers
+            const offerRes = await apiFetch('/offers/admin');
+            const offers = await offerRes.json();
+            document.getElementById('offer-list').innerHTML = offers.length ?
+                offers.map(o => `<div style="padding:10px; background:white; border-radius:5px; border-left:4px solid blue; margin-bottom:5px;"><div style="display:flex; justify-content:space-between;"><strong>${o.product_title}</strong><span style="color:blue;">₹${o.offer_price}</span></div><div style="margin-top:5px; text-align:right;"><button style="background:green; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;" onclick="respondOffer(${o.id}, 'accepted')">✓</button> <button style="background:red; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;" onclick="respondOffer(${o.id}, 'rejected')">✕</button></div></div>`).join('') : '<p style="text-align:center;">No offers.</p>';
+        }
+
+        // --- USER MANAGEMENT ---
+        async function loadUsers() {
+            const res = await apiFetch('/auth/users');
+            const users = await res.json();
+            const container = document.getElementById('user-list');
+
+            if(users.length === 0) { container.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">No users found.</td></tr>'; return; }
+
+            container.innerHTML = users.map(u => {
+                const isBanned = u.isBanned === 1;
+                const lastLoginTime = new Date(u.last_login).getTime();
+                const currentTime = new Date().getTime();
+                const diffMinutes = (currentTime - lastLoginTime) / (1000 * 60);
+                
+                let onlineBadge = diffMinutes < 10 ? '<span style="color:green; font-weight:bold; font-size:0.8rem;">● Online</span>' : `<span style="color:#999; font-size:0.8rem;">○ Offline</span>`;
+                const statusBadge = isBanned ? '<span style="color:red; background:#ffe6e6; padding:2px 8px; border-radius:4px;">Banned</span>' : '<span style="color:green; background:#e6fffa; padding:2px 8px; border-radius:4px;">Active</span>';
+                const btnText = isBanned ? "Unblock" : "Block";
+                const btnColor = isBanned ? "green" : "red";
+
+                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px;"><strong>${u.name}</strong><br>${onlineBadge}</td><td style="padding:12px; color:#555;">${u.email}</td><td style="padding:12px;">${statusBadge}</td><td style="padding:12px;"><button onclick="toggleBan(${u.id})" style="background:${btnColor}; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer;">${btnText}</button></td></tr>`;
+            }).join('');
+        }
+
+        async function toggleBan(id) {
+            if(confirm("Change user status?")) {
+                await apiFetch(`/auth/ban/${id}`, { method: 'PUT' });
+                loadUsers();
+            }
+        }
+
+        // --- EDIT & UPDATE FUNCTIONS ---
+        function enterEditMode(id) {
+            const p = allProducts.find(item => item.id === id);
+            if (!p) return;
+            document.getElementById('form-container').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('form-container').classList.add('editing-mode');
+            document.getElementById('form-title').innerText = `Editing: ${p.title}`;
+            document.getElementById('submit-btn').innerText = "UPDATE";
+            document.getElementById('cancel-btn').style.display = "inline-block";
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('p-title').value = p.title;
+            document.getElementById('p-category').value = p.category || 'General';
+            document.getElementById('p-desc').value = p.description || '';
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-stock').value = p.stock;
+            document.getElementById('image-preview-container').style.display = 'block';
+            document.getElementById('preview-img').src = `/uploads/${p.image}`;
+            document.getElementById('p-image').required = false;
+        }
+
+        function exitEditMode() {
+            document.getElementById('form-container').classList.remove('editing-mode');
+            document.getElementById('product-form').reset();
+            document.getElementById('form-title').innerText = "Add Product";
+            document.getElementById('submit-btn').innerText = "ADD";
+            document.getElementById('cancel-btn').style.display = "none";
+            document.getElementById('edit-id').value = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+            document.getElementById('p-image').required = true;
+        }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const isEdit = !!id;
+            const formData = new FormData();
+            formData.append('title', document.getElementById('p-title').value);
+            formData.append('category', document.getElementById('p-category').value);
+            formData.append('description', document.getElementById('p-desc').value);
+            formData.append('price', document.getElementById('p-price').value);
+            formData.append('stock', document.getElementById('p-stock').value);
+            const fileInput = document.getElementById('p-image');
+            if(fileInput.files[0]) formData.append('image', fileInput.files[0]);
+
+            const url = isEdit ? `/products/${id}` : '/products';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const res = await apiFetch(url, { method, body: formData });
+            if(res.ok) { alert('Success!'); exitEditMode(); loadData(); } else { alert('Error'); }
+        });
+
+        async function deleteProduct(id) { if(confirm('Delete?')) { await apiFetch(`/products/${id}`, { method: 'DELETE' }); loadData(); }}
+        async function updateStatus(id, status) { await apiFetch(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); loadData(); }
+        async function respondOffer(id, status) { if(confirm(`Mark as ${status}?`)) { await apiFetch(`/offers/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }); loadData(); }}
+
+        loadData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure Payment | ShopMart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* --- PAYMENT PAGE LAYOUT --- */
+        .payment-container { display: flex; gap: 30px; max-width: 1000px; margin: 4rem auto; }
+        .summary-box { flex: 1; background: #f9f9f9; padding: 30px; border-radius: 15px; height: fit-content; }
+        .payment-box { flex: 1.5; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        .card-input-group { margin-bottom: 20px; }
+        .card-input-group label { display: block; font-size: 0.9rem; color: #555; margin-bottom: 8px; font-weight: bold; }
+        .card-row { display: flex; gap: 20px; }
+        .card-icons { margin-bottom: 20px; display: flex; gap: 10px; }
+        .card-icon { width: 40px; height: 25px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; color: #555; }
+
+        /* --- TRUCK ANIMATION CSS --- */
+        :root {
+            --truck-primary: var(--accent-orange);
+            --truck-light: #FFD082;
+            --truck-dark: #023E36;
+            --truck-white: #FFF;
+            --truck-green: #16BF78;
+            --truck-sand: #DCB773;
+        }
+
+        .order {
+            appearance: none; border: 0; background: var(--truck-dark); position: relative;
+            height: 63px; width: 100%; padding: 0; outline: none; cursor: pointer;
+            border-radius: 32px; overflow: hidden; transition: transform .3s ease;
+            margin-top: 20px; font-family: 'Poppins', sans-serif;
+        }
+        .order span {
+            --o: 1; position: absolute; left: 0; right: 0; text-align: center; top: 19px;
+            line-height: 24px; color: var(--truck-white); font-size: 16px; font-weight: 600;
+            opacity: var(--o); transition: opacity .3s ease;
+        }
+        .order span.default { transition-delay: .3s; }
+        .order span.success { --offset: 16px; --o: 0; }
+        .order span.success svg {
+            width: 12px; height: 10px; display: inline-block; vertical-align: top; fill: none;
+            margin: 7px 0 0 4px; stroke: var(--truck-green); stroke-width: 2; stroke-linecap: round;
+            stroke-linejoin: round; stroke-dasharray: 16px; stroke-dashoffset: var(--offset);
+            transition: stroke-dashoffset .3s ease;
+        }
+        .order:active { transform: scale(.96); }
+        .order .lines {
+            opacity: 0; position: absolute; height: 3px; background: var(--truck-white);
+            border-radius: 2px; width: 6px; top: 30px; left: 100%;
+            box-shadow: 15px 0 0 var(--truck-white), 30px 0 0 var(--truck-white), 45px 0 0 var(--truck-white), 60px 0 0 var(--truck-white), 75px 0 0 var(--truck-white), 90px 0 0 var(--truck-white), 105px 0 0 var(--truck-white), 120px 0 0 var(--truck-white), 135px 0 0 var(--truck-white), 150px 0 0 var(--truck-white), 165px 0 0 var(--truck-white), 180px 0 0 var(--truck-white), 195px 0 0 var(--truck-white), 210px 0 0 var(--truck-white), 225px 0 0 var(--truck-white), 240px 0 0 var(--truck-white), 255px 0 0 var(--truck-white), 270px 0 0 var(--truck-white), 285px 0 0 var(--truck-white), 300px 0 0 var(--truck-white), 315px 0 0 var(--truck-white), 330px 0 0 var(--truck-white);
+        }
+        .order .back, .order .box { --start: var(--truck-white); --stop: #CDD9ED; border-radius: 2px; background: linear-gradient(var(--start), var(--stop)); position: absolute; }
+        .order .truck { width: 60px; height: 41px; left: 100%; z-index: 1; top: 11px; position: absolute; transform: translateX(24px); }
+        .order .truck:before, .order .truck:after { --r: -90deg; content: ""; height: 2px; width: 20px; right: 58px; position: absolute; display: block; background: var(--truck-white); border-radius: 1px; transform-origin: 100% 50%; transform: rotate(var(--r)); }
+        .order .truck:before { top: 4px; }
+        .order .truck:after { --r: 90deg; bottom: 4px; }
+        .order .truck .back { left: 0; top: 0; width: 60px; height: 41px; z-index: 1; }
+        .order .truck .front { overflow: hidden; position: absolute; border-radius: 2px 9px 9px 2px; width: 26px; height: 41px; left: 60px; }
+        .order .truck .front:before, .order .truck .front:after { content: ""; position: absolute; display: block; }
+        .order .truck .front:before { height: 13px; width: 2px; left: 0; top: 14px; background: linear-gradient(#6C7486, #3F4656); }
+        .order .truck .front:after { border-radius: 2px 9px 9px 2px; background: var(--truck-primary); width: 24px; height: 41px; right: 0; }
+        .order .truck .front .window { overflow: hidden; border-radius: 2px 8px 8px 2px; background: #FFD082; transform: perspective(4px) rotateY(3deg); width: 22px; height: 41px; position: absolute; left: 2px; top: 0; z-index: 1; transform-origin: 0 50%; }
+        .order .truck .front .window:before, .order .truck .front .window:after { content: ""; position: absolute; right: 0; }
+        .order .truck .front .window:before { top: 0; bottom: 0; width: 14px; background: var(--truck-dark); }
+        .order .truck .front .window:after { width: 14px; top: 7px; height: 4px; position: absolute; background: rgba(255,255,255,0.14); transform: skewY(14deg); box-shadow: 0 7px 0 rgba(255,255,255,0.14); }
+        .order .truck .light { width: 3px; height: 8px; left: 83px; transform-origin: 100% 50%; position: absolute; border-radius: 2px; transform: scaleX(.8); background: #f0dc5f; }
+        .order .truck .light:before { content: ""; height: 4px; width: 7px; opacity: 0; transform: perspective(2px) rotateY(-15deg) scaleX(.94); position: absolute; transform-origin: 0 50%; left: 3px; top: 50%; margin-top: -2px; background: linear-gradient(90deg,#f0dc5f,rgba(240,220,95,.7),rgba(240,220,95,0)); }
+        .order .truck .light.top { top: 4px; }
+        .order .truck .light.bottom { bottom: 4px; }
+        .order .box { --start: var(--truck-sand); --stop: var(--truck-sand); width: 21px; height: 21px; right: 100%; top: 21px; }
+        .order .box:before, .order .box:after { content: ""; top: 10px; position: absolute; left: 0; right: 0; }
+        .order .box:before { height: 3px; margin-top: -1px; background: rgba(0,0,0,.1); }
+        .order .box:after { height: 1px; background: rgba(0,0,0,.15); }
+        
+        /* Animations */
+        .order.animate .default { --o: 0; transition-delay: 0s; }
+        .order.animate .success { --offset: 0; --o: 1; transition-delay: 7s; }
+        .order.animate .success svg { transition-delay: 7.3s; }
+        .order.animate .truck { animation: truck 6s ease forwards; }
+        .order.animate .truck:before { animation: door1 2.4s ease forwards .3s; }
+        .order.animate .truck:after { animation: door2 2.4s ease forwards .6s; }
+        .order.animate .truck .light:before, .order.animate .truck .light:after { animation: light 6s ease forwards; }
+        .order.animate .box { animation: box 6s ease forwards; }
+        .order.animate .lines { animation: lines 6s ease forwards; }
+
+        @keyframes truck { 10%, 30% { transform: translateX(-164px); } 40% { transform: translateX(-104px); } 60% { transform: translateX(-224px); } 75%,100% { transform: translateX(24px); } }
+        @keyframes lines { 0%,30% { opacity:0; transform:scaleY(.7) translateX(0); } 35%,65% { opacity:1; } 70% { opacity:0; } 100% { transform:scaleY(.7) translateX(-400px); } }
+        @keyframes light { 0%,30% { opacity:0; transform:perspective(2px) rotateY(-15deg) scaleX(.88); } 40%,100% { opacity:1; transform:perspective(2px) rotateY(-15deg) scaleX(.94); } }
+        @keyframes door1 { 30%,50% { transform: rotate(32deg); } }
+        @keyframes door2 { 30%,50% { transform: rotate(-32deg); } }
+        @keyframes box { 8%,10% { transform:translateX(40px); opacity:1; } 25% { transform:translateX(112px); opacity:1; } 26% { opacity:0; } 27%,100% { transform:translateX(0); opacity:0; } }
+
+        /* --- POPUP MODAL STYLES (NEW) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Dim background */
+            display: none; /* Hidden by default */
+            justify-content: center; align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+            animation: popIn 0.4s ease;
+        }
+
+        @keyframes popIn { 
+            from { transform: scale(0.8); opacity: 0; } 
+            to { transform: scale(1); opacity: 1; } 
+        }
+
+        .modal-icon { font-size: 4rem; margin-bottom: 15px; display: block; }
+        .modal-title { font-family: 'Playfair Display'; font-size: 2rem; color: var(--primary-dark); margin-bottom: 10px; }
+        .modal-text { color: #666; margin-bottom: 30px; font-size: 1rem; }
+        
+        .modal-btn {
+            background: var(--accent-orange); color: white;
+            border: none; padding: 12px 30px; font-size: 1.1rem;
+            border-radius: 50px; cursor: pointer; font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .modal-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(244, 157, 55, 0.4); }
+    </style>
+</head>
+<body>
+    <header style="justify-content: center;">
+        <div class="logo">Shop<span>Mart</span> <span style="font-size:1rem; color:white; margin-left:10px; opacity:0.8;">| Secure Checkout</span></div>
+    </header>
+
+    <div class="container">
+        <div class="payment-container">
+            
+            <div class="summary-box">
+                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Order Summary</h3>
+                <div id="order-items-list"></div>
+                <hr style="border: 0; border-top: 1px solid #ddd; margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                    <span>Total to Pay</span>
+                    <span style="color: var(--accent-orange);" id="pay-total">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="payment-box">
+                <h2 style="margin-bottom: 20px;">Payment Details</h2>
+                
+                <div class="card-icons">
+                    <div class="card-icon" style="background:#1a1f71; color:white;">VISA</div>
+                    <div class="card-icon" style="background:#eb001b; color:white;">MC</div>
+                    <div class="card-icon">AMEX</div>
+                </div>
+
+                <form id="payment-form">
+                    <div class="card-input-group">
+                        <label>Cardholder Name</label>
+                        <input type="text" placeholder="John Doe" required style="margin-bottom:0;">
+                    </div>
+                    <div class="card-input-group">
+                        <label>Card Number</label>
+                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" required style="margin-bottom:0; letter-spacing: 2px;">
+                    </div>
+                    <div class="card-row">
+                        <div class="card-input-group" style="flex:1;">
+                            <label>Expiry Date</label>
+                            <input type="text" placeholder="MM / YY" maxlength="5" required style="margin-bottom:0;">
+                        </div>
+                        <div class="card-input-group" style="flex:1;">
+                            <label>CVV</label>
+                            <input type="password" placeholder="123" maxlength="3" required style="margin-bottom:0;">
+                        </div>
+                    </div>
+                    <div class="card-input-group">
+                        <label>Shipping Address</label>
+                        <textarea id="shipping-address" placeholder="Enter full delivery address..." required style="height:80px; resize:none;"></textarea>
+                    </div>
+
+                    <button class="order" type="button" id="pay-btn">
+                        <span class="default">Pay <span id="btn-total">₹0.00</span></span>
+                        <span class="success">
+                            Order Placed
+                            <svg viewBox="0 0 12 10"><polyline points="1.5 6 4.5 9 10.5 1"></polyline></svg>
+                        </span>
+                        <div class="box"></div>
+                        <div class="truck">
+                            <div class="back"></div>
+                            <div class="front"><div class="window"></div></div>
+                            <div class="light top"></div><div class="light bottom"></div>
+                        </div>
+                        <div class="lines"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="modal-icon">🎉</span>
+            <h2 class="modal-title">Order Confirmed!</h2>
+            <p class="modal-text">Thank you for your purchase. Your vintage items are being prepared.</p>
+            <button class="modal-btn" onclick="window.location.href='profile.html'">View Order History</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        if(!getToken()) window.location.href = 'login.html';
+
+        const items = JSON.parse(localStorage.getItem('checkout_items')) || [];
+        if(items.length === 0) { alert("No items."); window.location.href = 'index.html'; }
+
+        const container = document.getElementById('order-items-list');
+        let total = 0;
+        container.innerHTML = items.map(i => {
+            total += i.price * i.qty;
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>${i.qty}x ${i.title}</span><span>₹${(i.price * i.qty).toFixed(2)}</span></div>`;
+        }).join('');
+        document.getElementById('pay-total').innerText = '₹' + total.toFixed(2);
+        document.getElementById('btn-total').innerText = '₹' + total.toFixed(2);
+
+        // TRUCK LOGIC
+        const button = document.getElementById('pay-btn');
+        
+        button.addEventListener('click', async () => {
+            const address = document.getElementById('shipping-address').value;
+            if(!address) return alert("Please enter shipping address");
+
+            if (!button.classList.contains('animate')) {
+                button.classList.add('animate');
+                
+                try {
+                    const res = await apiFetch('/orders', {
+                        method: 'POST',
+                        body: JSON.stringify({ total_price: total, address: address, items: items })
+                    });
+
+                    if(res.ok) {
+                        // Wait for animation (6s) then show Popup
+                        setTimeout(() => {
+                            localStorage.removeItem('checkout_items');
+                            if(localStorage.getItem('is_cart_checkout')) {
+                                localStorage.removeItem('shopmart_cart');
+                                localStorage.removeItem('is_cart_checkout');
+                            }
+                            // SHOW MODAL INSTEAD OF REDIRECTING
+                            document.getElementById('success-modal').style.display = 'flex';
+                        }, 6000); 
+                    } else {
+                        button.classList.remove('animate');
+                        alert("Payment Failed. Try again.");
+                    }
+                } catch(err) {
+                    button.classList.remove('animate');
+                    alert("Network Error");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
