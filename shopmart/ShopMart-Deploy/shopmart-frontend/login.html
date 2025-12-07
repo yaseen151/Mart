@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMart | Login & Signup</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;500;600&display=swap');
+        :root { --primary-dark: #023E36; --accent-orange: #F49D37; --bg-cream: #F8F1E7; --white: #FFFFFF; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; text-decoration: none; }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--bg-cream); }
+        
+        .container { position: relative; width: 850px; height: 550px; background: var(--white); border-radius: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .container h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--primary-dark); margin-bottom: 10px; }
+        form { width: 100%; }
+        
+        .form-box { position: absolute; right: 0; width: 50%; height: 100%; padding: 40px; background: var(--white); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; transition: 0.6s ease-in-out 1.2s, visibility 0s 1s; z-index: 1; }
+        .container.active .form-box { right: 50%; }
+        .form-box.register { visibility: hidden; }
+        .container.active .form-box.register { visibility: visible; }
+        
+        .input-box { position: relative; margin: 15px 0; width: 100%; }
+        .input-box input { width: 100%; padding: 13px 50px 13px 20px; background: #eee; border-radius: 8px; border: none; font-size: 15px; outline: none; transition: all 0.3s ease; }
+        .input-box i { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #666; }
+        
+        /* TORCH EFFECT */
+        .torch-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.4rem; transition: all 0.3s ease; opacity: 0.6; filter: grayscale(100%); z-index: 10; }
+        .torch-active .torch-btn { opacity: 1; filter: grayscale(0%); transform: translateY(-50%) rotate(-20deg) scale(1.2); text-shadow: 0 0 15px #F49D37; }
+        .torch-active input { background-color: #fff !important; color: #000 !important; box-shadow: 0 0 20px rgba(244, 157, 55, 0.5), inset 0 0 10px rgba(244, 157, 55, 0.1) !important; border: 1px solid #F49D37; }
+        
+        .forgot-link { margin: -5px 0 15px; text-align: right; width: 100%; }
+        .forgot-link a { font-size: 0.9rem; color: #666; font-weight: 500; transition: 0.3s; }
+        .forgot-link a:hover { color: var(--accent-orange); text-decoration: underline; }
+        
+        .btn { width: 100%; height: 48px; background: var(--accent-orange); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 5px; transition: 0.3s; }
+        .btn:hover { background: #e08e2e; transform: translateY(-2px); }
+        .otp-link { margin-top: 15px; font-size: 0.9rem; cursor: pointer; color: var(--primary-dark); font-weight: bold; text-decoration: underline; }
+
+        /* SLIDER OVERLAY */
+        .toggle-box { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 100; pointer-events: none; }
+        .toggle-box::before { content: ""; position: absolute; left: -250%; width: 300%; height: 100%; background: var(--primary-dark); border-radius: 150px; z-index: 2; transition: 1.8s ease-in-out; }
+        .container.active .toggle-box::before { left: 50%; }
+        .toggle-panel { position: absolute; width: 50%; height: 100%; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; transition: 0.6s ease-in-out; pointer-events: auto; padding: 0 30px; text-align: center; }
+        .toggle-panel h1 { color: white; line-height: 1.2; margin-bottom: 10px; }
+        .toggle-panel p { margin-bottom: 20px; font-size: 0.9rem; }
+        .toggle-left { left: 0; transition-delay: 1.2s; }
+        .container.active .toggle-left { left: -50%; transition-delay: 0.6s; }
+        .toggle-right { right: -50%; transition-delay: 0.6s; }
+        .container.active .toggle-right { right: 0; transition-delay: 1.2s; }
+        .toggle-panel .btn { width: 160px; background: transparent; border: 2px solid #fff; }
+        .toggle-panel .btn:hover { background: white; color: var(--primary-dark); }
+
+        @media screen and (max-width: 650px) {
+            .container { height: 100vh; width: 100%; border-radius: 0; }
+            .form-box { width: 100%; height: 70%; bottom: 0; }
+            .container.active .form-box { right: 0; bottom: 30%; }
+            .toggle-box::before { left: 0; top: -270%; width: 100%; height: 300%; }
+            .container.active .toggle-box::before { top: 70%; }
+            .toggle-panel { width: 100%; height: 30%; padding: 0 20px; }
+            .toggle-left { top: 0; }
+            .toggle-right { bottom: -30%; }
+            .container.active .toggle-right { bottom: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        
+        <div class="form-box login">
+            <form id="login-form">
+                <h1 id="login-title">Welcome Back</h1>
+                <p style="font-size:0.9rem; margin-bottom:20px; color:#666;">Enter your details to login</p>
+
+                <div class="input-box">
+                    <input type="email" id="login-email" placeholder="Email Address" required />
+                    <i class="bx bxs-envelope"></i>
+                </div>
+
+                <div class="input-box" id="login-pass-box">
+                    <input type="password" id="login-password" placeholder="Password" required style="padding-right: 45px;" />
+                    <span class="torch-btn" onclick="toggleTorch('login-password', 'login-pass-box')">🔦</span>
+                </div>
+
+                <div class="input-box" id="otp-group" style="display:none;">
+                    <input type="text" id="login-otp" placeholder="Enter OTP Code" />
+                    <i class="bx bxs-key"></i>
+                </div>
+
+                <div class="forgot-link"><a href="#" onclick="handleForgotPass()">Forgot Password?</a></div>
+                <button type="submit" class="btn" id="login-btn-text">Login</button>
+                <div class="otp-link" onclick="toggleLoginMode()">Login via OTP</div>
+            </form>
+        </div>
+
+        <div class="form-box register">
+            <form id="register-form">
+                <h1>Create Account</h1>
+                <p style="font-size:0.9rem; margin-bottom:20px; color:#666;">Join our vintage community</p>
+
+                <div class="input-box">
+                    <input type="text" id="reg-name" placeholder="Full Name" required />
+                    <i class="bx bxs-user"></i>
+                </div>
+
+                <div class="input-box">
+                    <input type="tel" id="reg-mobile" placeholder="Mobile Number" required pattern="[0-9]{10}" />
+                    <i class="bx bxs-phone"></i>
+                </div>
+
+                <div class="input-box">
+                    <input type="email" id="reg-email" placeholder="Email" required />
+                    <i class="bx bxs-envelope"></i>
+                </div>
+
+                <div class="input-box" id="reg-pass-box">
+                    <input type="password" id="reg-password" placeholder="Create Password" required style="padding-right: 45px;" />
+                    <span class="torch-btn" onclick="toggleTorch('reg-password', 'reg-pass-box')">🔦</span>
+                </div>
+
+                <button type="submit" class="btn">Register</button>
+            </form>
+        </div>
+
+        <div class="toggle-box">
+            <div class="toggle-panel toggle-left">
+                <h1>Hello, Friend!</h1>
+                <p>Register with your personal details to use all of site features</p>
+                <button class="btn register-btn">Register</button>
+            </div>
+            <div class="toggle-panel toggle-right">
+                <h1>Welcome Back!</h1>
+                <p>Enter your personal details to use all of site features</p>
+                <button class="btn login-btn">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.querySelector(".container");
+        const registerBtn = document.querySelector(".register-btn");
+        const loginBtn = document.querySelector(".login-btn");
+        registerBtn.addEventListener("click", () => { container.classList.add("active"); });
+        loginBtn.addEventListener("click", () => { container.classList.remove("active"); });
+
+        function toggleTorch(inputId, boxId) {
+            const input = document.getElementById(inputId);
+            const box = document.getElementById(boxId);
+            if (input.type === "password") { input.type = "text"; box.classList.add("torch-active"); } 
+            else { input.type = "password"; box.classList.remove("torch-active"); }
+        }
+
+        const API_URL = 'http://localhost:5000/api';
+        async function apiFetch(endpoint, options = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            const config = { ...options, headers };
+            return await fetch(`${API_URL}${endpoint}`, config);
+        }
+
+        // LOGIN LOGIC (OTP + Password)
+        let isOtpMode = false;
+        function toggleLoginMode() {
+            isOtpMode = !isOtpMode;
+            const passGroup = document.getElementById('login-pass-box');
+            const otpGroup = document.getElementById('otp-group');
+            const btnText = document.getElementById('login-btn-text');
+            const title = document.getElementById('login-title');
+
+            if (isOtpMode) {
+                passGroup.style.display = 'none'; document.getElementById('login-password').required = false;
+                otpGroup.style.display = 'none'; btnText.innerText = "Send OTP"; title.innerText = "OTP Login";
+            } else {
+                passGroup.style.display = 'block'; document.getElementById('login-password').required = true;
+                otpGroup.style.display = 'none'; btnText.innerText = "Login"; title.innerText = "Welcome Back";
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const otpInput = document.getElementById('login-otp');
+            const btnText = document.getElementById('login-btn-text');
+
+            if (isOtpMode) {
+                if (btnText.innerText === "Send OTP") {
+                    try {
+                        const res = await apiFetch('/auth/otp/request', { method: 'POST', body: JSON.stringify({ email }) });
+                        const data = await res.json();
+                        if (res.ok) { alert(data.message); btnText.innerText = "Verify & Login"; document.getElementById('otp-group').style.display = 'block'; otpInput.required = true; } 
+                        else { alert(data.message); }
+                    } catch(err) { alert("Network Error"); }
+                } else {
+                    try {
+                        const res = await apiFetch('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ email, otp: otpInput.value }) });
+                        const data = await res.json();
+                        handleLoginSuccess(res, data);
+                    } catch(err) { alert("Network Error"); }
+                }
+            } else {
+                try {
+                    const res = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+                    const data = await res.json();
+                    handleLoginSuccess(res, data);
+                } catch(err) { alert("Network Error"); }
+            }
+        });
+
+        function handleLoginSuccess(res, data) {
+            if (res.ok) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                // Trigger Spin Wheel for New Users
+                if (localStorage.getItem('isNewUser') === 'true') {
+                    localStorage.setItem('showSpinWheel', 'true'); 
+                    localStorage.removeItem('isNewUser'); 
+                }
+                window.location.href = 'index.html';
+            } else { alert(data.message || "Login failed"); }
+        }
+
+        // SIGNUP LOGIC
+        function triggerConfetti() {
+            var count = 200; var defaults = { origin: { y: 0.7 } };
+            function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
+            fire(0.25, { spread: 26, startVelocity: 55, }); fire(0.2, { spread: 60, }); fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 }); fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 }); fire(0.1, { spread: 120, startVelocity: 45, });
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const mobile = document.getElementById('reg-mobile').value;
+
+            try {
+                const res = await apiFetch('/auth/signup', { method: 'POST', body: JSON.stringify({ name, email, password, mobile }) });
+                const data = await res.json();
+                if (res.ok) {
+                    triggerConfetti();
+                    setTimeout(() => {
+                        alert('Account created! Please Login.');
+                        localStorage.setItem('isNewUser', 'true'); 
+                        container.classList.remove("active");
+                    }, 1500);
+                } else { alert(data.message || "Signup failed"); }
+            } catch (err) { alert("Network Error"); }
+        });
+
+        // FORGOT PASSWORD
+        async function handleForgotPass() {
+            const email = prompt("Enter your email for password reset:");
+            if(email) {
+                try {
+                    const res = await apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+                    const data = await res.json();
+                    alert(res.ok ? "✅ " + data.message : "❌ " + data.message);
+                } catch(err) { alert("Network error"); }
+            }
+        }
+    </script>
+</body>
+</html>

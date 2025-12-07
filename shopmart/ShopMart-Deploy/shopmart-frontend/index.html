@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMart | Vintage Collection</title>
+    <link rel="stylesheet" href="css/style.css">
+   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+</head>
+<body>
+    
+    <header>
+        <a href="index.html" class="logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
+            <div class="logo-text">Shop<span>Mart</span></div>
+        </a>
+
+        <div class="nav-search-wrapper">
+            <div class="search-box-inner">
+                <input type="text" id="search" placeholder="Search items..." autocomplete="off">
+                <span id="mic-btn" onclick="startVoiceSearch()" title="Voice Search" style="margin-right:8px;">🎤</span>
+                <label for="img-search" id="cam-btn" title="Search by Image" style="cursor:pointer; font-size:1.2rem;">📷</label>
+                <input type="file" id="img-search" accept="image/*" style="display:none;" onchange="handleVisualSearch(event)">
+            </div>
+            <div id="search-results" class="search-dropdown"></div>
+        </div>
+
+        <div class="nav-actions" id="nav-actions">
+            <select id="lang-selector" onchange="changeLanguage(this.value)" 
+                style="padding:5px; border-radius:5px; border:none; margin-right:10px; cursor:pointer; font-weight:bold; background:#f4f4f4; height:30px;">
+                <option value="en">🇺🇸 En</option>
+                <option value="hi">🇮🇳 Hi</option>
+                <option value="kn">🇮🇳 Kn</option>
+                <option value="ta">🇮🇳 Ta</option>
+                <option value="te">🇮🇳 Te</option>
+                <option value="ur">🇵🇰 Ur</option>
+                <option value="fr">🇫🇷 Fr</option>
+                <option value="es">🇪🇸 Es</option>
+            </select>
+            </div>
+    </header>
+
+    <section class="hero-slider">
+        <div class="slider-wrapper">
+            <div class="slide">
+                <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?q=80&w=2070&auto=format&fit=crop" alt="Electronics">
+                <div class="slide-caption">
+                    <h1 data-lang="hero_title">Next-Gen Tech</h1>
+                    <p data-lang="hero_desc">Upgrade your world with the latest gadgets.</p>
+                    <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?q=80&w=2070&auto=format&fit=crop" alt="Gaming">
+                <div class="slide-caption">
+                    <h1>Level Up</h1>
+                    <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://images.unsplash.com/photo-1523206489230-c012c64b2b48?q=80&w=1287&auto=format&fit=crop" alt="Mobiles">
+                <div class="slide-caption">
+                    <h1>Smart & Powerful</h1>
+                    <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=2070&auto=format&fit=crop" alt="Laptops">
+                <div class="slide-caption">
+                    <h1>Work & Create</h1>
+                    <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="category-container">
+        <div class="category-scroll" id="category-wrapper">
+            <button class="cat-pill active" onclick="setActiveCategory(this, 'All')"><span>♾️</span> All</button>
+            <button class="cat-pill" onclick="setActiveCategory(this, 'Electronics')"><span>📸</span> Electronics</button>
+            <button class="cat-pill" onclick="setActiveCategory(this, 'Fashion')"><span>👗</span> Fashion</button>
+            <button class="cat-pill" onclick="setActiveCategory(this, 'Vintage')"><span>🕰️</span> Vintage</button>
+            <button class="cat-pill" onclick="setActiveCategory(this, 'Home')"><span>🛋️</span> Home</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 class="section-heading" data-lang="latest_arrivals">Latest Arrivals</h2>
+        <div id="product-grid" class="product-grid"></div>
+    </div>
+
+    <div id="spin-overlay" class="wheel-overlay" style="display:none;">
+        <div class="wheel-container">
+            <span class="close-wheel" onclick="closeWheel()">✕</span>
+            <h2 style="font-family:'Playfair Display'; color:var(--primary-dark); margin-bottom:5px;">Lucky Spin!</h2>
+            <p style="color:#666; margin-bottom:20px; font-size:0.9rem;">Spin to win exclusive coupons.</p>
+            
+            <div style="position:relative; display:inline-block;">
+                <div class="wheel-pointer"></div>
+                <div class="the-wheel" id="the-wheel">
+                    <div class="wheel-text item-1"><span style="--r: 30deg;">20% OFF<br><small>Vintage</small></span></div>
+                    <div class="wheel-text item-2"><span style="--r: 90deg;">Free<br>Ship</span></div>
+                    <div class="wheel-text item-3"><span style="--r: 150deg;">Try<br>Again</span></div>
+                    <div class="wheel-text item-4"><span style="--r: 210deg;">Mystery<br>Box</span></div>
+                    <div class="wheel-text item-5"><span style="--r: 270deg;">10% OFF<br><small>All Items</small></span></div>
+                    <div class="wheel-text item-6"><span style="--r: 330deg;">5% OFF<br><small>Welcome</small></span></div>
+                </div>
+                <button class="spin-btn-center" onclick="spinWheel()">SPIN</button>
+            </div>
+            <div class="prize-msg" id="prize-msg"></div>
+        </div>
+    </div>
+
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header"><span>ShopBot 🤖</span><span style="cursor:pointer;" onclick="toggleChat()">✕</span></div>
+        <div class="chat-body" id="chat-body"><div class="msg bot">Hello! Ask me about shipping or returns.</div></div>
+        <div class="chat-input-area"><input type="text" id="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)"><button class="btn" onclick="sendMessage()">➤</button></div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <a href="#" class="logo" style="margin-bottom:15px;">
+                    <div class="logo-text">Shop<span>Mart</span></div>
+                </a>
+                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7); line-height:1.6;">
+                    Curated vintage aesthetics for the modern world. <br>
+                    Sustainable, stylish, and unique.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <a href="index.html">All Products</a>
+                <a href="#">New Arrivals</a>
+                <a href="#">Featured</a>
+                <a href="#">Deals</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Help Center</a>
+                <a href="#">Shipping Info</a>
+                <a href="#">Returns</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    ✉️ me.junaid.in@gmail.com
+                </a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📞 +91 98765 43210</a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📍 Bangalore, India</a>
+                <div style="margin-top:15px; display:flex; gap:15px;">
+                    <a href="https://www.linkedin.com/in/shaikh-junaid-jd135?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" 
+                       target="_blank" title="LinkedIn" style="font-size:1.4rem;">💼</a>
+                    <a href="#" title="Instagram" style="font-size:1.4rem;">📸</a>
+                    <a href="#" title="Twitter" style="font-size:1.4rem;">🐦</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ShopMart Inc. | Built by Junaid
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        function scrollToProducts() { document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'}); }
+
+        // --- LOAD PRODUCTS ---
+        function setActiveCategory(element, category) {
+            document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            loadProducts(category);
+        }
+
+        async function loadProducts(category = 'All') {
+            const url = category === 'All' ? '/products' : `/products?category=${category}`;
+            const res = await apiFetch(url);
+            const products = await res.json();
+            const container = document.getElementById('product-grid');
+            
+            if(products.length === 0) { container.innerHTML = '<p style="text-align:center; width:100%;">No products found.</p>'; return; }
+
+            container.innerHTML = products.map(p => {
+                let imgSrc = getImgPath(p.image);
+                return `
+                    <div class="card">
+                        <div style="position:relative; cursor:pointer;" onclick="location.href='product.html?id=${p.id}'">
+                            <img src="${imgSrc}" class="product-img-fix" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2748/2748558.png'">
+                            <button class="wishlist-btn" data-id="${p.id}" onclick="event.stopPropagation(); toggleWishlist(this, ${p.id})">🤍</button>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="card-title" onclick="location.href='product.html?id=${p.id}'">${p.title}</h3>
+                            <p style="font-size:0.8rem; color:#888;">${p.category || 'General'}</p>
+                            <p class="card-price">₹${p.price}</p>
+                            <div style="display:flex; gap:10px; margin-top:auto;">
+                                <button class="btn" style="flex:1; font-size:0.9rem; padding:10px;" onclick="addToCart(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Add</button>
+                                <button class="btn" style="flex:1; font-size:0.9rem; padding:10px; background-color:var(--primary-dark);" onclick="buyNow(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Buy Now</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            loadWishlistState();
+        }
+        loadProducts();
+
+        // --- SLIDESHOW ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const wrapper = document.querySelector('.slider-wrapper');
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+        let slideInterval = setInterval(nextSlide, 8000);
+        document.querySelector('.hero-slider').addEventListener('mouseenter', () => clearInterval(slideInterval));
+        document.querySelector('.hero-slider').addEventListener('mouseleave', () => slideInterval = setInterval(nextSlide, 8000));
+
+        // --- SPIN WHEEL (Trigger on Login) ---
+        if (localStorage.getItem('showSpinWheel') === 'true') {
+            setTimeout(() => { document.getElementById('spin-overlay').style.display = 'flex'; }, 1500);
+            localStorage.removeItem('showSpinWheel');
+        }
+
+        function closeWheel() { document.getElementById('spin-overlay').style.display = 'none'; }
+        
+        let isSpinning = false;
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            const wheel = document.getElementById('the-wheel');
+            const msg = document.getElementById('prize-msg');
+            msg.innerText = "Spinning...";
+            const randomDeg = Math.floor(1800 + Math.random() * 360); 
+            wheel.style.transform = `rotate(-${randomDeg}deg)`; 
+
+            setTimeout(async () => {
+                const actualDeg = randomDeg % 360;
+                let prize = "", code = "", desc = "";
+
+                if (actualDeg >= 0 && actualDeg < 60) { prize = "20% OFF"; code = "VINTAGE20"; desc = "20% Off Vintage Items"; }
+                else if (actualDeg >= 60 && actualDeg < 120) { prize = "Free Shipping"; code = "FREESHIP"; desc = "Free Shipping on next order"; }
+                else if (actualDeg >= 120 && actualDeg < 180) { prize = "Better Luck Next Time"; }
+                else if (actualDeg >= 180 && actualDeg < 240) { prize = "Mystery Gift!"; code = "MYSTERY"; desc = "Free Mystery Item"; }
+                else if (actualDeg >= 240 && actualDeg < 300) { prize = "10% OFF"; code = "SAVE10"; desc = "10% Off Entire Order"; }
+                else if (actualDeg >= 300 && actualDeg < 360) { prize = "5% OFF"; code = "HELLO5"; desc = "5% Welcome Discount"; }
+
+                msg.innerHTML = `🎉 Won: <span style="color:var(--accent-orange)">${prize}</span>`;
+                // ... inside setTimeout ...
+                msg.innerHTML = `🎉 Won: <span style="color:var(--accent-orange)">${prize}</span>`;
+
+                // FIRE CONFETTI
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                
+                // ... save to database ...
+                if(code && getToken()) {
+                    try {
+                        await apiFetch('/coupons/save', { method: 'POST', body: JSON.stringify({ code, description: desc }) });
+                    } catch(e) { console.error(e); }
+                }
+
+                setTimeout(closeWheel, 5000);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

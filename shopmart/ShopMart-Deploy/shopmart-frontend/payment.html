@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure Payment | ShopMart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.0.1/dist/gsap.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #2d1b69 0%, #a62a7d 100%);
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --bg-soft: #fdf2f8; /* Red-50/100ish tone */
+            --truck-dark: #2d1b69; 
+            --truck-white: #FFF; 
+            --truck-sand: #DCB773;
+        }
+
+        body {
+            background: linear-gradient(to bottom right, #fdf2f8, #fce7f3);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .payment-container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+            align-items: stretch;
+        }
+
+        /* Left Side (Summary) */
+        .summary-box {
+            flex: 0.8;
+            background: #f8fafc;
+            padding: 30px;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Right Side (Form) */
+        .payment-box {
+            flex: 1.2;
+            background: white;
+            padding: 30px;
+            position: relative;
+        }
+
+        /* --- PAYMENT METHOD SELECTORS --- */
+        .method-selection {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .method-option {
+            flex: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            background: white;
+        }
+
+        .method-option:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        .method-option.active {
+            border-color: var(--accent-purple);
+            background: #f5f3ff; /* Purple-50 */
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15);
+        }
+
+        .method-option.active::after {
+            content: '✔';
+            position: absolute;
+            top: -8px; right: -8px;
+            background: var(--accent-purple);
+            color: white;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .icon-box { width: 40px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #f1f5f9; font-weight: bold; font-style: italic; color: #1e3a8a; }
+
+        /* --- 3D CARD VISUAL --- */
+        .card-wrapper {
+            perspective: 1000px;
+            margin-bottom: 20px;
+            height: 180px;
+            transition: all 0.5s ease;
+        }
+        
+        .card-wrapper.hidden {
+            height: 0;
+            margin-bottom: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateY(-20px);
+        }
+
+        .card-visual {
+            width: 280px; height: 170px;
+            margin: 0 auto;
+            border-radius: 16px; position: relative; transform-style: preserve-3d;
+            transition: transform 0.6s; color: white; font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); cursor: pointer;
+        }
+        
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            border-radius: 16px; backface-visibility: hidden;
+            background: var(--primary-gradient);
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .card-back { transform: rotateY(180deg); }
+        .card-visual.flipped { transform: rotateY(180deg); }
+
+        .chip { width: 35px; height: 25px; background: linear-gradient(135deg, #d9a7c7, #fffcdc); border-radius: 5px; margin-bottom: 20px; }
+        .card-number-display { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .card-details-row { display: flex; justify-content: space-between; font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; }
+        .black-strip { width: 120%; height: 35px; background: #000; position: relative; left: -20px; top: 15px; }
+        .cvv-box { background: white; color: black; padding: 5px; border-radius: 3px; margin-top: 25px; text-align: right; font-weight: bold; width: 50px; margin-left: auto; }
+
+        /* --- FORM --- */
+        .card-form-section { transition: opacity 0.3s; }
+        .card-form-section.hidden { display: none; }
+
+        .cod-info-section {
+            display: none;
+            background: #ecfdf5;
+            border: 1px dashed var(--accent-green);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: #065f46;
+            margin-bottom: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+        .cod-info-section.active { display: block; }
+
+        .form-grid { display: grid; gap: 15px; }
+        
+        .input-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; transition: 0.3s; background: #f8fafc;
+        }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--accent-purple); background: white; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
+        .row { display: flex; gap: 15px; }
+
+        /* Coupon */
+        .coupon-group { display: flex; margin-bottom: 10px; }
+        .coupon-group input { border-radius: 8px 0 0 8px; border-right: none; }
+        .coupon-btn { background: #334155; color: white; padding: 0 15px; border-radius: 0 8px 8px 0; border: none; cursor: pointer; font-weight: 600; }
+        
+        /* Truck Button */
+        .order { height: 55px; border-radius: 27px; margin-top: 20px; width: 100%; border: 0; background: var(--truck-dark); position: relative; cursor: pointer; overflow: hidden; font-family: 'Poppins', sans-serif; }
+        .order span { position: absolute; left: 0; right: 0; top: 16px; text-align: center; color: white; font-weight: 600; font-size: 16px; transition: opacity 0.3s; }
+        .order .truck { width: 60px; height: 41px; left: 100%; top: 7px; z-index: 1; position: absolute; transform: translateX(24px); }
+        /* (Kept existing complex truck CSS logic below in style block) */
+
+        /* Truck Animation Details */
+        .order span.success { opacity: 0; }
+        .order span.success svg { width: 12px; height: 10px; display: inline-block; vertical-align: top; fill: none; margin: 7px 0 0 4px; stroke: var(--accent-green); stroke-width: 2; stroke-dasharray: 16px; stroke-dashoffset: 16px; transition: stroke-dashoffset .3s ease; }
+        .order.animate span.default { opacity: 0; }
+        .order.animate span.success { opacity: 1; transition-delay: 7s; }
+        .order.animate span.success svg { stroke-dashoffset: 0; transition-delay: 7.3s; }
+        /* Truck Parts */
+        .order .truck:before, .order .truck:after { content: ""; height: 2px; width: 20px; right: 58px; position: absolute; background: white; border-radius: 1px; transform-origin: 100% 50%; }
+        .order .truck:before { top: 4px; transform: rotate(-90deg); } .order .truck:after { bottom: 4px; transform: rotate(90deg); }
+        .order .truck .back { left: 0; top: 0; width: 60px; height: 41px; z-index: 1; background: linear-gradient(white, #CDD9ED); position: absolute; border-radius: 2px; }
+        .order .truck .front { overflow: hidden; position: absolute; border-radius: 2px 9px 9px 2px; width: 26px; height: 41px; left: 60px; background: var(--accent-purple); }
+        .order .truck .front:before { height: 13px; width: 2px; left: 0; top: 14px; background: linear-gradient(#6C7486, #3F4656); content: ""; position: absolute; display: block; }
+        .order .truck .front .window { overflow: hidden; border-radius: 2px 8px 8px 2px; background: #FFD082; transform: perspective(4px) rotateY(3deg); width: 22px; height: 41px; position: absolute; left: 2px; top: 0; z-index: 1; transform-origin: 0 50%; }
+        .order .truck .light { width: 3px; height: 8px; left: 83px; transform-origin: 100% 50%; position: absolute; border-radius: 2px; transform: scaleX(.8); background: #f0dc5f; }
+        .order .box { width: 21px; height: 21px; right: 100%; top: 21px; background: var(--truck-sand); position: absolute; border-radius: 2px; }
+        .order .lines { opacity: 0; position: absolute; height: 3px; background: white; border-radius: 2px; width: 6px; top: 30px; left: 100%; box-shadow: 15px 0 0 white, 30px 0 0 white, 45px 0 0 white; }
+
+        /* Animation Keyframes */
+        .order.animate .truck { animation: truck 6s ease forwards; }
+        .order.animate .box { animation: box 6s ease forwards; }
+        .order.animate .lines { animation: lines 6s ease forwards; }
+        @keyframes truck { 10%, 30% { transform: translateX(-164px); } 40% { transform: translateX(-104px); } 60% { transform: translateX(-224px); } 75%,100% { transform: translateX(24px); } }
+        @keyframes lines { 0%,30% { opacity:0; transform:scaleY(.7) translateX(0); } 35%,65% { opacity:1; } 70% { opacity:0; } 100% { transform:scaleY(.7) translateX(-400px); } }
+        @keyframes box { 8%,10% { transform:translateX(40px); opacity:1; } 25% { transform:translateX(112px); opacity:1; } 26% { opacity:0; } 27%,100% { transform:translateX(0); opacity:0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Success Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px); }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-width: 400px; width: 90%; animation: popIn 0.4s ease; }
+        .modal-btn { background: var(--accent-purple); color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); }
+
+        @media(max-width: 768px) { .payment-container { flex-direction: column-reverse; } }
+    </style>
+</head>
+<body>
+    <header style="justify-content: center; padding: 20px;">
+        <div class="logo" style="font-size: 1.5rem; font-weight: bold; color: #2d1b69;">
+            Shop<span style="color:var(--accent-purple);">Mart</span> 
+            <span style="font-size:1rem; color:#64748b; margin-left:10px; font-weight: normal;">| Checkout</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="payment-container">
+            
+            <div class="summary-box">
+                <h3 style="margin-bottom: 20px; color: #1e293b;">Order Summary</h3>
+                <div id="order-items-list" style="font-size:0.9rem; color: #475569; max-height:200px; overflow-y:auto; margin-bottom: 20px;"></div>
+                
+                <div class="coupon-group">
+                    <input type="text" id="coupon-code" placeholder="Promo Code">
+                    <button class="coupon-btn" onclick="applyCoupon()">Apply</button>
+                </div>
+                <p id="discount-msg" style="font-size: 0.8rem; height: 20px; margin-bottom: 10px;"></p>
+
+                <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0 20px;">
+                
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #0f172a;">
+                    <span>Total</span>
+                    <span style="color: var(--accent-purple);" id="pay-total">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="payment-box">
+                <h2 style="margin-bottom: 20px; color: #1e293b; font-size: 1.5rem;">Payment Method</h2>
+                
+                <div class="method-selection">
+                    <div class="method-option active" onclick="togglePayment('card', this)">
+                        <div class="icon-box" style="color:#2563eb;">VISA</div>
+                        <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">Card</div>
+                    </div>
+                    <div class="method-option" onclick="togglePayment('cod', this)">
+                        <div class="icon-box" style="color:#10b981;">💵</div>
+                        <div style="font-size: 0.9rem; font-weight: 600; color: #334155;">Cash</div>
+                    </div>
+                </div>
+
+                <div class="card-wrapper" id="card-visual-container">
+                    <div class="card-visual" id="credit-card">
+                        <div class="card-front">
+                            <div class="chip"></div>
+                            <div class="card-number-display">#### #### #### ####</div>
+                            <div class="card-details-row">
+                                <div><span>Holder</span><div class="card-holder-display">FULL NAME</div></div>
+                                <div><span>Expires</span><div class="card-expiry-display">MM/YY</div></div>
+                            </div>
+                        </div>
+                        <div class="card-back">
+                            <div class="black-strip"></div>
+                            <div class="cvv-box">***</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cod-info" class="cod-info-section">
+                    <h4 style="margin:0; font-size:1.1rem;">Cash on Delivery Selected</h4>
+                    <p style="margin:5px 0 0; font-size:0.9rem; opacity:0.8;">Pay securely with cash when your order arrives.</p>
+                </div>
+
+                <div class="form-grid">
+                    <div id="card-inputs" class="card-form-section">
+                        <div class="input-group">
+                            <label>Card Number</label>
+                            <input type="text" id="card-num" maxlength="19" placeholder="1234 5678 9101 1121" oninput="updateCardNum(this)">
+                        </div>
+                        <div class="input-group" style="margin-top: 15px;">
+                            <label>Name on Card</label>
+                            <input type="text" id="card-name" maxlength="20" placeholder="John Doe" oninput="updateCardName(this)">
+                        </div>
+                        <div class="row" style="margin-top: 15px;">
+                            <div class="input-group" style="flex:1;">
+                                <label>Expiry</label>
+                                <input type="text" id="card-exp" maxlength="5" placeholder="MM/YY" oninput="updateCardExp(this)">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label>CVV</label>
+                                <input type="password" id="card-cvv" maxlength="3" placeholder="123" onfocus="flipCard(true)" onblur="flipCard(false)" oninput="updateCVV(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Delivery Address</label>
+                        <textarea id="shipping-address" placeholder="House No, Street, City, Pincode" required style="height:60px; resize:none;"></textarea>
+                    </div>
+
+                    <button class="order" type="button" id="pay-btn">
+                        <span class="default">Confirm Payment <span id="btn-total">₹0.00</span></span>
+                        <span class="success">Order Placed <svg viewBox="0 0 12 10"><polyline points="1.5 6 4.5 9 10.5 1"></polyline></svg></span>
+                        <div class="box"></div>
+                        <div class="truck">
+                            <div class="back"></div><div class="front"><div class="window"></div></div>
+                            <div class="light top"></div><div class="light bottom"></div>
+                        </div>
+                        <div class="lines"></div>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="modal-icon" style="font-size:3rem; display:block; margin-bottom:10px;">🎉</span>
+            <h2 style="color:#2d1b69;">Payment Successful!</h2>
+            <p style="color:#64748b; margin-bottom:20px;">Your order has been confirmed.</p>
+            <button class="modal-btn" onclick="window.location.href='profile.html'">Track Order</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        if(!getToken()) window.location.href = 'login.html';
+
+        let currentPaymentMethod = 'card';
+
+        // --- PAYMENT TOGGLE LOGIC ---
+        function togglePayment(method, element) {
+            currentPaymentMethod = method;
+            
+            // UI Selection
+            document.querySelectorAll('.method-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            // Toggle Visuals
+            const cardContainer = document.getElementById('card-visual-container');
+            const cardInputs = document.getElementById('card-inputs');
+            const codInfo = document.getElementById('cod-info');
+
+            if(method === 'card') {
+                cardContainer.classList.remove('hidden');
+                cardInputs.classList.remove('hidden');
+                codInfo.classList.remove('active');
+            } else {
+                cardContainer.classList.add('hidden');
+                cardInputs.classList.add('hidden');
+                codInfo.classList.add('active');
+            }
+        }
+
+        // --- VISUAL CARD UPDATES ---
+        function updateCardNum(el) {
+            let val = el.value.replace(/\D/g, '').substring(0,16);
+            val = val != '' ? val.match(/.{1,4}/g).join(' ') : '';
+            el.value = val;
+            document.querySelector('.card-number-display').innerText = val || '#### #### #### ####';
+        }
+        function updateCardName(el) { document.querySelector('.card-holder-display').innerText = el.value || 'FULL NAME'; }
+        function updateCardExp(el) {
+            let val = el.value.replace(/\D/g, '').substring(0,4);
+            if(val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2);
+            el.value = val;
+            document.querySelector('.card-expiry-display').innerText = val || 'MM/YY';
+        }
+        function updateCVV(el) { document.querySelector('.cvv-box').innerText = el.value || '***'; }
+        function flipCard(isBack) {
+            const card = document.getElementById('credit-card');
+            if(isBack) card.classList.add('flipped'); else card.classList.remove('flipped');
+        }
+
+        // --- CART LOGIC ---
+        const items = JSON.parse(localStorage.getItem('checkout_items')) || [];
+        if(items.length === 0) { alert("No items."); window.location.href = 'index.html'; }
+
+        const container = document.getElementById('order-items-list');
+        let total = 0;
+        let discount = 0;
+
+        container.innerHTML = items.map(i => {
+            total += i.price * i.qty;
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span>${i.qty}x ${i.title}</span>
+                <span style="font-weight:600;">₹${(i.price * i.qty).toFixed(2)}</span>
+            </div>`;
+        }).join('');
+
+        function updateTotal() {
+            let final = total - (total * (discount / 100));
+            document.getElementById('pay-total').innerText = '₹' + final.toFixed(2);
+            document.getElementById('btn-total').innerText = '₹' + final.toFixed(2);
+        }
+        updateTotal();
+
+        async function applyCoupon() {
+            const code = document.getElementById('coupon-code').value.toUpperCase();
+            try {
+                const res = await apiFetch('/coupons/validate', { method: 'POST', body: JSON.stringify({ code }) });
+                const data = await res.json();
+                const msg = document.getElementById('discount-msg');
+                if (data.success) { discount = data.discountPercent; msg.style.color = 'green'; msg.innerText = `✅ ${data.message}`; } 
+                else { discount = 0; msg.style.color = 'red'; msg.innerText = `❌ ${data.message}`; }
+                updateTotal();
+            } catch(e) { console.error(e); }
+        }
+
+        // --- SUBMIT ORDER ---
+        const button = document.getElementById('pay-btn');
+        button.addEventListener('click', async () => {
+            const address = document.getElementById('shipping-address').value;
+            if(!address) return alert("Please enter delivery address");
+
+            // Card Validation (Only if Card is selected)
+            if(currentPaymentMethod === 'card') {
+                if(document.getElementById('card-num').value.length < 16) return alert("Invalid Card Number");
+            }
+
+            if (!button.classList.contains('animate')) {
+                button.classList.add('animate');
+                let finalTotal = total - (total * (discount / 100));
+
+                try {
+                    const res = await apiFetch('/orders', { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            total_price: finalTotal, 
+                            address: address, 
+                            items: items,
+                            payment_method: currentPaymentMethod // Send payment type to backend
+                        }) 
+                    });
+                    
+                    if(res.ok) {
+                        setTimeout(() => {
+                            localStorage.removeItem('checkout_items');
+                            if(localStorage.getItem('is_cart_checkout')) { localStorage.removeItem('shopmart_cart'); localStorage.removeItem('is_cart_checkout'); }
+                            document.getElementById('success-modal').style.display = 'flex';
+                        }, 6000); 
+                    } else { 
+                        button.classList.remove('animate'); alert("Order Failed"); 
+                    }
+                } catch(err) { 
+                    button.classList.remove('animate'); alert("Network Error"); 
+                }
+            }
+        });
+    </script>
+</body>
+</html>

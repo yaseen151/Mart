@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | ShopMart</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">Shop<span>Mart</span></div>
+        <nav>
+            <a href="cart.html">Back to Cart</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="form-box">
+            <h2 style="text-align:center; margin-bottom:1rem;">Checkout</h2>
+            
+            <div style="text-align:center; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:5px;">
+                <p>Total Amount to Pay:</p>
+                <strong id="pay-total" style="color:var(--accent-end); font-size:1.5rem;">₹0.00</strong>
+            </div>
+            
+            <form id="checkout-form">
+                <h3>Shipping Address</h3>
+                <input type="text" id="addr-street" placeholder="Street Address" required>
+                <input type="text" id="addr-city" placeholder="City" required>
+                <input type="text" id="addr-zip" placeholder="Zip Code" required>
+                
+                <h3 style="margin-top:20px;">Payment Method</h3>
+                <div style="padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:15px;">
+                    <label>
+                        <input type="radio" name="payment" checked> 
+                        Cash on Delivery (COD)
+                    </label>
+                </div>
+                <input type="text" placeholder="Card Number (Optional)" disabled style="background:#eee;">
+                
+                <button type="submit" class="btn" style="width:100%; margin-top:10px;">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // 1. Check Login Status
+        if(!getToken()) {
+            alert("You must be logged in to checkout.");
+            window.location.href = 'login.html';
+        }
+
+        // 2. Calculate Total from Cart
+        const cart = JSON.parse(localStorage.getItem('shopmart_cart')) || [];
+        
+        if(cart.length === 0) {
+            alert("Your cart is empty!");
+            window.location.href = 'index.html';
+        }
+
+        // Calculate total price
+        const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        document.getElementById('pay-total').innerText = '₹' + total.toFixed(2);
+
+        // 3. Handle Order Submission
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Combine address inputs into one string
+            const address = document.getElementById('addr-street').value + ", " +
+                            document.getElementById('addr-city').value + " - " +
+                            document.getElementById('addr-zip').value;
+
+            // Prepare data for Backend
+            const orderData = {
+                total_price: total,
+                address: address,
+                items: cart // Send the full array of items
+            };
+
+            const res = await apiFetch('/orders', {
+                method: 'POST',
+                body: JSON.stringify(orderData)
+            });
+
+            if (res.ok) {
+                alert('✅ Order Placed Successfully!');
+                localStorage.removeItem('shopmart_cart'); // Clear the cart
+                window.location.href = 'profile.html'; // Go to profile to see order history
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Error placing order. Try again.');
+            }
+        });
+    </script>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h4 class="logo-text">Shop<span>Mart</span></h4>
+                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7);">
+                    Bringing vintage aesthetics to the modern world. <br>
+                    Sustainable, stylish, and unique.
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <a href="index.html">All Products</a>
+                <a href="#">New Arrivals</a>
+                <a href="#">Featured</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Help Center</a>
+                <a href="#">Shipping Info</a>
+                <a href="#">Returns</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    ✉️ me.junaid.in@gmail.com
+                </a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📞 +91 98765 43210</a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📍 Bangalore, India</a>
+                <div style="margin-top:15px; display:flex; gap:15px;">
+                    <a href="https://www.linkedin.com/in/shaikh-junaid-jd135?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" 
+                       target="_blank" title="LinkedIn" style="font-size:1.4rem;">💼</a>
+                    <a href="#" title="Instagram" style="font-size:1.4rem;">📸</a>
+                    <a href="#" title="Twitter" style="font-size:1.4rem;">🐦</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ShopMart Inc. | Built by Junaid
+        </div>
+    </footer>
+</body>
+</html>

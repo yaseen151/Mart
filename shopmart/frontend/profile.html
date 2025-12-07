@@ -3,30 +3,58 @@
 <head>
     <title>My Profile | ShopMart</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* ... (Keep existing styles) ... */
-        .order-card { background: var(--bg-card); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .order-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: bold; font-size: 1.2rem; }
-        .order-status { background: #eefbf0; color: green; padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; border: 1px solid green; }
+        /* --- ECO IMPACT CARD --- */
+        .eco-card {
+            background: linear-gradient(135deg, #023E36, #1b5e54);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(2, 62, 54, 0.3);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .eco-card::before {
+            content: '🌱'; font-size: 10rem; position: absolute;
+            top: -20px; right: -20px; opacity: 0.1; transform: rotate(15deg);
+        }
+        .eco-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .eco-stat-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .eco-value { font-size: 1.8rem; font-weight: bold; color: #81e6d9; }
+        .eco-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-top: 5px; }
+        .tree-level { font-size: 4rem; display: block; margin-bottom: 10px; animation: grow 1s ease-out; }
+        @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+
+        /* --- EXISTING STYLES --- */
+        .order-card { background: var(--bg-card); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); position: relative; }
+        .order-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; font-family: 'Playfair Display'; color: var(--primary-dark); font-weight: bold; font-size: 1.2rem; }
+        
+        /* Updated Status Badges */
+        .order-status { padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; border: 1px solid transparent; }
+        .status-Processing { background: #fff7ed; color: #ea580c; border-color: #fdba74; }
+        .status-Shipped { background: #eff6ff; color: #2563eb; border-color: #93c5fd; }
+        .status-Delivered { background: #ecfdf5; color: #059669; border-color: #6ee7b7; }
+
         .order-item { display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin: 10px 0; align-items: center; }
         .order-total { text-align: right; font-weight: bold; color: var(--primary-dark); font-size: 1.3rem; margin-top: 20px; padding-top: 10px; border-top: 2px solid #eee; }
-        .btn-download { background-color: var(--accent-orange); color: white; padding: 10px 25px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(244, 157, 55, 0.3); transition: transform 0.2s; font-size: 0.9rem; display: inline-block; }
-        .btn-download:hover { transform: translateY(-2px); background-color: #e08e2e; }
-        .btn-container { text-align: center; margin-top: 20px; }
+        .coupon-card { background: #fffdf5; border: 2px dashed var(--accent-orange); padding: 20px; text-align: center; border-radius: 10px; }
+        .coupon-code { background: #eee; padding: 5px 10px; border-radius: 5px; font-family: monospace; font-size: 1.2rem; letter-spacing: 1px; font-weight: bold; color: var(--primary-dark); margin: 10px 0; display: inline-block; }
+        
+        /* --- NEW TRACKING BAR CSS --- */
+        .track-container { margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; }
+        .progress-track { display: flex; justify-content: space-between; position: relative; margin-top: 10px; }
+        .progress-track::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 4px; background: #e2e8f0; z-index: 0; transform: translateY(-50%); }
+        .step { z-index: 1; position: relative; background: white; width: 30px; height: 30px; border-radius: 50%; border: 4px solid #e2e8f0; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .step.active { border-color: #10b981; background: #10b981; }
+        .step.active::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
+        .step-label { position: absolute; top: 35px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #94a3b8; width: 80px; text-align: center; font-weight: 500; }
+        .step.active + .step-label { color: #10b981; font-weight: bold; }
 
-        /* --- PASSWORD MODAL STYLES --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 20000;
-            display: none; justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-box {
-            background: var(--bg-card); padding: 30px; border-radius: 20px;
-            width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border-color);
-        }
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: var(--bg-card); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
         .modal-box input { margin-bottom: 15px; }
         .modal-box h3 { font-family: 'Playfair Display'; color: var(--primary-dark); margin-bottom: 20px; }
     </style>
@@ -50,9 +78,12 @@
             <form id="profile-form">
                 <label style="display:block; margin-bottom:5px; color:#666;">Change Photo</label>
                 <input type="file" id="dp-input">
+                <label style="display:block; margin-bottom:5px; color:#666;">Full Name</label>
                 <input type="text" id="name" placeholder="Name">
+                <label style="display:block; margin-bottom:5px; color:#666;">Mobile Number</label>
+                <input type="tel" id="mobile" placeholder="Mobile Number">
+                <label style="display:block; margin-bottom:5px; color:#666;">Email (Cannot change)</label>
                 <input type="email" id="email" placeholder="Email" disabled style="background:#eee; cursor:not-allowed;">
-                
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button type="submit" class="btn" style="flex:1;">Update Profile</button>
                     <button type="button" class="btn" style="flex:1; background:var(--primary-dark);" onclick="openPassModal()">Change Password</button>
@@ -60,12 +91,21 @@
             </form>
         </div>
 
+        <div style="max-width: 600px; margin: 0 auto;">
+            <div id="eco-dashboard"></div>
+        </div>
+
+        <div style="max-width: 600px; margin: 3rem auto;">
+            <h2 class="section-heading">My Rewards 🎟️</h2>
+            <div id="coupon-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <p style="text-align:center; grid-column: 1/-1;">Loading rewards...</p>
+            </div>
+        </div>
+
         <div style="max-width: 600px; margin: 3rem auto;">
             <h2 class="section-heading">My Offers</h2>
             <div id="my-offers-list"><p style="text-align:center;">Loading offers...</p></div>
         </div>
-
-        <hr style="border:0; border-top:2px solid #eee; max-width:600px; margin:0 auto;">
 
         <div style="max-width: 600px; margin: 3rem auto;">
             <h2 class="section-heading">Order History</h2>
@@ -92,105 +132,221 @@
                     <div class="logo-text">Shop<span>Mart</span></div>
                 </a>
                 <p style="font-size:0.9rem; color:rgba(255,255,255,0.7); line-height:1.6;">
-                    Curated vintage aesthetics for the modern world.
+                    Curated vintage aesthetics for the modern world. <br>
+                    Sustainable, stylish, and unique.
                 </p>
             </div>
-            <div class="footer-col"><h4>Contact Us</h4><a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold;">✉️ me.junaid.in@gmail.com</a></div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <a href="index.html">All Products</a>
+                <a href="#">New Arrivals</a>
+                <a href="#">Featured</a>
+                <a href="#">Deals</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Help Center</a>
+                <a href="#">Shipping Info</a>
+                <a href="#">Returns</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    ✉️ me.junaid.in@gmail.com
+                </a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📞 +91 98765 43210</a>
+                <a href="#" style="display:flex; align-items:center; gap:8px;">📍 Bangalore, India</a>
+                <div style="margin-top:15px; display:flex; gap:15px;">
+                    <a href="https://www.linkedin.com/in/shaikh-junaid-jd135?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" 
+                       target="_blank" title="LinkedIn" style="font-size:1.4rem;">💼</a>
+                    <a href="#" title="Instagram" style="font-size:1.4rem;">📸</a>
+                    <a href="#" title="Twitter" style="font-size:1.4rem;">🐦</a>
+                </div>
+            </div>
         </div>
-        <div class="footer-bottom">&copy; 2025 ShopMart Inc. | Built by Junaid</div>
+        <div class="footer-bottom">
+            &copy; 2025 ShopMart Inc. | Built by Junaid
+        </div>
     </footer>
 
     <script src="js/app.js"></script>
     <script>
         if(!getToken()) window.location.href = 'login.html';
 
-        // --- PASSWORD MODAL LOGIC ---
-        function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; }
-        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
-
-        async function submitPasswordChange() {
-            const oldPass = document.getElementById('old-pass').value;
-            const newPass = document.getElementById('new-pass').value;
-
-            if(!oldPass || !newPass) return alert("Please fill all fields.");
-
-            const res = await apiFetch('/auth/change-password', {
-                method: 'PUT',
-                body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
+        // --- ECO LOGIC ---
+        function calculateEcoImpact(orders) {
+            let totalItems = 0;
+            orders.forEach(o => {
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.order_items || o.items);
+                if(items) items.forEach(i => totalItems += i.qty);
             });
 
-            const data = await res.json();
-            if(res.ok) {
-                alert("✅ Password Changed Successfully!");
-                closePassModal();
-            } else {
-                alert("❌ " + data.message);
+            const co2 = (totalItems * 5.5).toFixed(1); 
+            const water = (totalItems * 700).toFixed(0); 
+            
+            let tree = '🌱';
+            let rank = 'Seedling';
+            if(totalItems > 5) { tree = '🌿'; rank = 'Sprout'; }
+            if(totalItems > 10) { tree = '🌳'; rank = 'Guardian'; }
+            if(totalItems > 20) { tree = '🌲'; rank = 'Forest Legend'; }
+
+            document.getElementById('eco-dashboard').innerHTML = `
+                <div class="eco-card">
+                    <span class="tree-level">${tree}</span>
+                    <h3>${rank} Level</h3>
+                    <p style="font-size:0.9rem; opacity:0.9;">Your Vintage Impact</p>
+                    <div class="eco-stats">
+                        <div class="eco-stat-box">
+                            <div class="eco-value">${totalItems}</div>
+                            <div class="eco-label">Items Rescued</div>
+                        </div>
+                        <div class="eco-stat-box">
+                            <div class="eco-value">${co2}kg</div>
+                            <div class="eco-label">CO₂ Saved</div>
+                        </div>
+                        <div class="eco-stat-box">
+                            <div class="eco-value">${water}L</div>
+                            <div class="eco-label">Water Saved</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- LOADERS ---
+        async function loadProfile() {
+            try {
+                const res = await apiFetch('/auth/profile');
+                if(!res.ok) throw new Error("Failed");
+                const user = await res.json();
+                document.getElementById('name').value = user.name;
+                document.getElementById('email').value = user.email;
+                document.getElementById('mobile').value = user.mobile || ''; 
+                document.getElementById('profile-dp').src = user.dp ? `/uploads/${user.dp}` : 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+            } catch(e) { console.error(e); }
+        }
+
+        // --- UPDATED LOAD ORDERS WITH TRACKING ---
+        async function loadOrders() {
+            try {
+                // Fetch from the endpoint that returns user orders
+                const res = await apiFetch('/orders'); 
+                const orders = await res.json();
+                const container = document.getElementById('order-list');
+                
+                calculateEcoImpact(orders);
+
+                if (orders.length === 0) { 
+                    container.innerHTML = '<p style="text-align:center; color:#777;">No orders yet.</p>'; 
+                    return; 
+                }
+                
+                container.innerHTML = orders.map(order => {
+                    // Handle JSON parsing safely
+                    const items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.order_items || order.items || []);
+                    
+                    const itemsHtml = items.map(i => `
+                        <div class="order-item">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <img src="/uploads/${i.image || 'default.jpg'}" style="width:40px; height:40px; object-fit:cover; border-radius:5px;">
+                                <span>${i.qty}x ${i.title || i.name}</span>
+                            </div>
+                            <span>₹${(i.price * i.qty).toFixed(2)}</span>
+                        </div>`
+                    ).join('');
+
+                    // Determine Status Step (Logic for Tracking Bar)
+                    const status = order.status || 'Processing';
+                    let step = 1;
+                    if(status === 'Shipped' || status === 'Out for Delivery') step = 2;
+                    if(status === 'Delivered') step = 3;
+
+                    return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span>Order #${order.id}</span>
+                            <span class="order-status status-${status}">${status}</span>
+                        </div>
+                        
+                        <div style="margin-bottom:15px; font-size:0.9rem; color:var(--text-muted);">
+                            <strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br>
+                            <strong>To:</strong> ${order.address || order.shipping_address}
+                        </div>
+
+                        <div class="track-container">
+                            <small style="text-transform:uppercase; font-weight:bold; color:#64748b; font-size:0.7rem;">Tracking Status</small>
+                            <div class="progress-track">
+                                <div class="step ${step >= 1 ? 'active' : ''}">
+                                    <div class="step-label">Processing</div>
+                                </div>
+                                <div class="step ${step >= 2 ? 'active' : ''}">
+                                    <div class="step-label">Shipped</div>
+                                </div>
+                                <div class="step ${step >= 3 ? 'active' : ''}">
+                                    <div class="step-label">Delivered</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #eee; margin-top:20px;">
+                            ${itemsHtml}
+                        </div>
+                        <div class="order-total">Total: ₹${Number(order.total_price).toFixed(2)}</div>
+                    </div>`;
+                }).join('');
+            } catch(e) { 
+                console.error(e);
+                document.getElementById('order-list').innerHTML = '<p style="text-align:center; color:red">Error loading orders.</p>';
             }
         }
 
-        // --- EXISTING LOGIC ---
-        async function loadProfile() {
-            const res = await apiFetch('/auth/profile');
-            const user = await res.json();
-            document.getElementById('name').value = user.name;
-            document.getElementById('email').value = user.email;
-            document.getElementById('profile-dp').src = user.dp ? `/uploads/${user.dp}` : 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+        async function loadCoupons() {
+            try {
+                const res = await apiFetch('/coupons/my');
+                const coupons = await res.json();
+                document.getElementById('coupon-list').innerHTML = coupons.length ? coupons.map(c => `<div class="coupon-card"><small style="color:#888; font-size:0.7rem;">CODE</small><div class="coupon-code">${c.code}</div><p style="font-size:0.9rem; margin:0; color:#555;">${c.discount_desc}</p></div>`).join('') : '<p style="text-align:center; grid-column: 1/-1;">No coupons.</p>';
+            } catch(e) {}
         }
 
         async function loadMyOffers() {
-            const res = await apiFetch('/offers/my');
-            const offers = await res.json();
-            const container = document.getElementById('my-offers-list');
-            if(offers.length === 0) { container.innerHTML = '<p style="text-align:center; color:#777;">You haven\'t made any offers.</p>'; return; }
-            container.innerHTML = offers.map(o => {
-                let color = o.status === 'accepted' ? 'green' : (o.status === 'rejected' ? 'red' : 'orange');
-                return `<div class="order-card" style="flex-direction:row; justify-content:space-between; padding:15px; margin-bottom:15px; display:flex; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <img src="/uploads/${o.image}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;">
-                        <div><h4 style="margin:0;">${o.title}</h4><p style="font-weight:bold; color:var(--accent-orange); margin:5px 0 0 0;">My Offer: ₹${o.offer_price}</p></div>
-                    </div>
-                    <div style="text-align:right;"><span style="background:${color}; color:white; padding:5px 15px; border-radius:50px; font-size:0.8rem; text-transform:capitalize; font-weight:bold;">${o.status}</span></div>
-                </div>`;
-            }).join('');
+            try {
+                const res = await apiFetch('/offers/my');
+                const offers = await res.json();
+                document.getElementById('my-offers-list').innerHTML = offers.length ? offers.map(o => `<div class="order-card" style="flex-direction:row; justify-content:space-between; padding:15px; display:flex; align-items:center;"><div style="display:flex; align-items:center; gap:15px;"><img src="/uploads/${o.image}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;"><div><h4 style="margin:0;">${o.title}</h4><p style="font-weight:bold; color:var(--accent-orange); margin:0;">Offer: ₹${o.offer_price}</p></div></div><div style="text-align:right; font-weight:bold; color:${o.status==='accepted'?'green':(o.status==='rejected'?'red':'orange')}">${o.status}</div></div>`).join('') : '<p style="text-align:center;">No offers.</p>';
+            } catch(e) {}
         }
 
-        async function loadOrders() {
-            const res = await apiFetch('/orders');
-            if (!res.ok) { document.getElementById('order-list').innerHTML = '<p>No orders found.</p>'; return; }
-            const orders = await res.json();
-            const container = document.getElementById('order-list');
-            if (orders.length === 0) { container.innerHTML = '<p style="text-align:center; color:#777;">You haven\'t placed any orders yet.</p>'; return; }
-            window.myOrders = orders;
-
-            container.innerHTML = orders.map(order => {
-                const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-                const itemsHtml = items.map(i => `<div class="order-item"><div style="display:flex; align-items:center; gap:10px;"><img src="/uploads/${i.image}" style="width:40px; height:40px; object-fit:cover; border-radius:5px;"><span>${i.qty}x ${i.title}</span></div><span>₹${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
-                return `<div class="order-card" id="invoice-${order.id}">
-                        <div class="order-header"><span>Order #${order.id}</span><span class="order-status">Paid</span></div>
-                        <div style="margin-bottom:15px; font-size:0.9rem; color:var(--text-muted); line-height:1.6;"><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br><strong>Shipping To:</strong> ${order.address}</div>
-                        <div style="background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #eee;">${itemsHtml}</div>
-                        <div class="order-total">Total: ₹${Number(order.total_price).toFixed(2)}</div>
-                    </div>`;
-            }).join('');
-        }
-
+        // Profile Update
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData();
             formData.append('name', document.getElementById('name').value);
+            formData.append('mobile', document.getElementById('mobile').value);
             const fileInput = document.getElementById('dp-input');
             if(fileInput.files[0]) formData.append('dp', fileInput.files[0]);
-            const res = await apiFetch('/auth/profile', { method: 'PUT', body: formData });
-            if(res.ok) {
-                alert('Profile Updated!');
-                const profileRes = await apiFetch('/auth/profile');
-                const freshUser = await profileRes.json();
-                localStorage.setItem('user', JSON.stringify(freshUser));
-                location.reload();
-            } else { alert('Error updating profile'); }
+            
+            try {
+                const res = await apiFetch('/auth/profile', { method: 'PUT', body: formData });
+                if(res.ok) { alert('Updated!'); location.reload(); }
+                else { alert('Failed to update'); }
+            } catch(e) { alert('Error updating profile'); }
         });
 
+        // Password Update
+        function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; }
+        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
+        async function submitPasswordChange() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            try {
+                const res = await apiFetch('/auth/change-password', { method: 'PUT', body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass }) });
+                const data = await res.json();
+                if(res.ok) { alert("✅ Changed!"); closePassModal(); } else { alert("❌ " + data.message); }
+            } catch(e) { alert("Error changing password"); }
+        }
+
         loadProfile();
+        loadCoupons();
         loadMyOffers();
         loadOrders();
     </script>

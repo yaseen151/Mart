@@ -5,29 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShopMart | Vintage Collection</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .wishlist-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 35px;
-            height: 35px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: none;
-            z-index: 10;
-            transition: transform 0.2s;
-            color: #ccc; /* Default Grey */
-        }
-        .wishlist-btn:hover { transform: scale(1.1); }
-        .wishlist-btn.active { color: red; }
-    </style>
+   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 </head>
 <body>
     
@@ -36,24 +15,30 @@
             <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
             <div class="logo-text">Shop<span>Mart</span></div>
         </a>
-      <div class="nav-search-wrapper">
-            
-            <div class="search-box-inner">
-                <input type="text" id="search" placeholder="Search vintage items..." autocomplete="off">
-                
-                <span id="mic-btn" onclick="startVoiceSearch()" title="Voice Search">🎤</span>
-            </div>
 
+        <div class="nav-search-wrapper">
+            <div class="search-box-inner">
+                <input type="text" id="search" placeholder="Search items..." autocomplete="off">
+                <span id="mic-btn" onclick="startVoiceSearch()" title="Voice Search" style="margin-right:8px;">🎤</span>
+                <label for="img-search" id="cam-btn" title="Search by Image" style="cursor:pointer; font-size:1.2rem;">📷</label>
+                <input type="file" id="img-search" accept="image/*" style="display:none;" onchange="handleVisualSearch(event)">
+            </div>
             <div id="search-results" class="search-dropdown"></div>
-            
-        </div>  <div class="nav-actions" id="nav-actions">
+        </div>
+
+        <div class="nav-actions" id="nav-actions">
             <select id="lang-selector" onchange="changeLanguage(this.value)" 
                 style="padding:5px; border-radius:5px; border:none; margin-right:10px; cursor:pointer; font-weight:bold; background:#f4f4f4; height:30px;">
                 <option value="en">🇺🇸 En</option>
                 <option value="hi">🇮🇳 Hi</option>
+                <option value="kn">🇮🇳 Kn</option>
+                <option value="ta">🇮🇳 Ta</option>
+                <option value="te">🇮🇳 Te</option>
+                <option value="ur">🇵🇰 Ur</option>
+                <option value="fr">🇫🇷 Fr</option>
                 <option value="es">🇪🇸 Es</option>
             </select>
-        </div>
+            </div>
     </header>
 
     <section class="hero-slider">
@@ -70,7 +55,6 @@
                 <img src="https://images.unsplash.com/photo-1550009158-9ebf69173e03?q=80&w=2070&auto=format&fit=crop" alt="Gaming">
                 <div class="slide-caption">
                     <h1>Level Up</h1>
-                    <p>High-performance gear for ultimate gaming.</p>
                     <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
                 </div>
             </div>
@@ -78,7 +62,6 @@
                 <img src="https://images.unsplash.com/photo-1523206489230-c012c64b2b48?q=80&w=1287&auto=format&fit=crop" alt="Mobiles">
                 <div class="slide-caption">
                     <h1>Smart & Powerful</h1>
-                    <p>Discover the newest smartphones.</p>
                     <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
                 </div>
             </div>
@@ -86,7 +69,6 @@
                 <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=2070&auto=format&fit=crop" alt="Laptops">
                 <div class="slide-caption">
                     <h1>Work & Create</h1>
-                    <p>Laptops designed for productivity.</p>
                     <button class="hero-btn" onclick="scrollToProducts()" data-lang="shop_now">Shop Now</button>
                 </div>
             </div>
@@ -108,17 +90,52 @@
         <div id="product-grid" class="product-grid"></div>
     </div>
 
+    <div id="spin-overlay" class="wheel-overlay" style="display:none;">
+        <div class="wheel-container">
+            <span class="close-wheel" onclick="closeWheel()">✕</span>
+            <h2 style="font-family:'Playfair Display'; color:var(--primary-dark); margin-bottom:5px;">Lucky Spin!</h2>
+            <p style="color:#666; margin-bottom:20px; font-size:0.9rem;">Spin to win exclusive coupons.</p>
+            
+            <div style="position:relative; display:inline-block;">
+                <div class="wheel-pointer"></div>
+                <div class="the-wheel" id="the-wheel">
+                    <div class="wheel-text item-1"><span style="--r: 30deg;">20% OFF<br><small>Vintage</small></span></div>
+                    <div class="wheel-text item-2"><span style="--r: 90deg;">Free<br>Ship</span></div>
+                    <div class="wheel-text item-3"><span style="--r: 150deg;">Try<br>Again</span></div>
+                    <div class="wheel-text item-4"><span style="--r: 210deg;">Mystery<br>Box</span></div>
+                    <div class="wheel-text item-5"><span style="--r: 270deg;">10% OFF<br><small>All Items</small></span></div>
+                    <div class="wheel-text item-6"><span style="--r: 330deg;">5% OFF<br><small>Welcome</small></span></div>
+                </div>
+                <button class="spin-btn-center" onclick="spinWheel()">SPIN</button>
+            </div>
+            <div class="prize-msg" id="prize-msg"></div>
+        </div>
+    </div>
+
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header"><span>ShopBot 🤖</span><span style="cursor:pointer;" onclick="toggleChat()">✕</span></div>
+        <div class="chat-body" id="chat-body"><div class="msg bot">Hello! Ask me about shipping or returns.</div></div>
+        <div class="chat-input-area"><input type="text" id="chat-input" placeholder="Type..." onkeypress="handleChatKey(event)"><button class="btn" onclick="sendMessage()">➤</button></div>
+    </div>
+
     <footer>
         <div class="footer-content">
             <div class="footer-col">
-                <h4 class="logo-text">Shop<span>Mart</span></h4>
-                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7);">Bringing vintage aesthetics to the modern world.</p>
+                <a href="#" class="logo" style="margin-bottom:15px;">
+                    <div class="logo-text">Shop<span>Mart</span></div>
+                </a>
+                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7); line-height:1.6;">
+                    Curated vintage aesthetics for the modern world. <br>
+                    Sustainable, stylish, and unique.
+                </p>
             </div>
             <div class="footer-col">
                 <h4>Shop</h4>
-                <a href="#">All Products</a>
+                <a href="index.html">All Products</a>
                 <a href="#">New Arrivals</a>
                 <a href="#">Featured</a>
+                <a href="#">Deals</a>
             </div>
             <div class="footer-col">
                 <h4>Support</h4>
@@ -128,28 +145,31 @@
             </div>
             <div class="footer-col">
                 <h4>Contact Us</h4>
-                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold; display:flex; align-items:center; gap:8px;">✉️ me.junaid.in@gmail.com</a>
+                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    ✉️ me.junaid.in@gmail.com
+                </a>
                 <a href="#" style="display:flex; align-items:center; gap:8px;">📞 +91 98765 43210</a>
                 <a href="#" style="display:flex; align-items:center; gap:8px;">📍 Bangalore, India</a>
                 <div style="margin-top:15px; display:flex; gap:15px;">
-                    <a href="https://www.linkedin.com/in/shaikh-junaid-jd135?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" title="LinkedIn" style="font-size:1.4rem;">💼</a>
+                    <a href="https://www.linkedin.com/in/shaikh-junaid-jd135?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" 
+                       target="_blank" title="LinkedIn" style="font-size:1.4rem;">💼</a>
                     <a href="#" title="Instagram" style="font-size:1.4rem;">📸</a>
                     <a href="#" title="Twitter" style="font-size:1.4rem;">🐦</a>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom">&copy; 2025 ShopMart Inc. All Rights Reserved.</div>
+        <div class="footer-bottom">
+            &copy; 2025 ShopMart Inc. | Built by Junaid
+        </div>
     </footer>
 
     <script src="js/app.js"></script>
     <script>
-        function scrollToProducts() {
-            document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'});
-        }
+        function scrollToProducts() { document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'}); }
 
+        // --- LOAD PRODUCTS ---
         function setActiveCategory(element, category) {
-            const buttons = document.querySelectorAll('.cat-pill');
-            buttons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
             loadProducts(category);
         }
@@ -160,33 +180,20 @@
             const products = await res.json();
             const container = document.getElementById('product-grid');
             
-            if(products.length === 0) {
-                container.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1 / -1; font-size:1.2rem; color:#666;">No products found.</p>';
-                return;
-            }
+            if(products.length === 0) { container.innerHTML = '<p style="text-align:center; width:100%;">No products found.</p>'; return; }
 
             container.innerHTML = products.map(p => {
-                let imgSrc = p.image;
-                if (!imgSrc.startsWith('http')) {
-                    imgSrc = `/uploads/${p.image}`;
-                }
-
+                let imgSrc = getImgPath(p.image);
                 return `
                     <div class="card">
-                        <div style="position:relative;">
-                            <button class="wishlist-btn" data-id="${p.id}" onclick="toggleWishlist(this, ${p.id})">🤍</button>
-                            
-                            <div style="cursor:pointer;" onclick="location.href='product.html?id=${p.id}'">
-                                <img src="${imgSrc}" alt="${p.title}" class="product-img-fix" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2748/2748558.png'">
-                                ${p.stock < 5 ? '<span style="position:absolute; top:10px; left:10px; background:#ff4d4d; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Low Stock</span>' : ''}
-                            </div>
+                        <div style="position:relative; cursor:pointer;" onclick="location.href='product.html?id=${p.id}'">
+                            <img src="${imgSrc}" class="product-img-fix" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2748/2748558.png'">
+                            <button class="wishlist-btn" data-id="${p.id}" onclick="event.stopPropagation(); toggleWishlist(this, ${p.id})">🤍</button>
                         </div>
-
                         <div class="card-body">
-                            <h3 class="card-title" onclick="location.href='product.html?id=${p.id}'" style="cursor:pointer;">${p.title}</h3>
-                            <p style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">${p.category || 'General'}</p>
+                            <h3 class="card-title" onclick="location.href='product.html?id=${p.id}'">${p.title}</h3>
+                            <p style="font-size:0.8rem; color:#888;">${p.category || 'General'}</p>
                             <p class="card-price">₹${p.price}</p>
-                            
                             <div style="display:flex; gap:10px; margin-top:auto;">
                                 <button class="btn" style="flex:1; font-size:0.9rem; padding:10px;" onclick="addToCart(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Add</button>
                                 <button class="btn" style="flex:1; font-size:0.9rem; padding:10px; background-color:var(--primary-dark);" onclick="buyNow(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Buy Now</button>
@@ -195,122 +202,70 @@
                     </div>
                 `;
             }).join('');
-            
-            // Load Wishlist State (to color hearts red if already liked)
-            await loadWishlistState();
+            loadWishlistState();
         }
-        
         loadProducts();
 
-        document.getElementById('search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(card => {
-                const title = card.querySelector('.card-title').textContent.toLowerCase();
-                card.style.display = title.includes(term) ? 'block' : 'none';
-            });
-        });
-
+        // --- SLIDESHOW ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
-        const totalSlides = slides.length;
         const wrapper = document.querySelector('.slider-wrapper');
-
         function nextSlide() {
-            currentSlide++;
-            if (currentSlide >= totalSlides) currentSlide = 0;
+            currentSlide = (currentSlide + 1) % slides.length;
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
-
         let slideInterval = setInterval(nextSlide, 8000);
-        const sliderSection = document.querySelector('.hero-slider');
-        sliderSection.addEventListener('mouseenter', () => clearInterval(slideInterval));
-        sliderSection.addEventListener('mouseleave', () => slideInterval = setInterval(nextSlide, 8000));
-    </script>
+        document.querySelector('.hero-slider').addEventListener('mouseenter', () => clearInterval(slideInterval));
+        document.querySelector('.hero-slider').addEventListener('mouseleave', () => slideInterval = setInterval(nextSlide, 8000));
 
-    <button class="chat-toggle" onclick="toggleChat()">💬</button>
-    
-    <div class="chat-window" id="chat-window">
-        <div class="chat-header">
-            <span>ShopBot By JD 🤖</span>
-            <span style="cursor:pointer;" onclick="toggleChat()">✕</span>
-        </div>
-        <div class="chat-body" id="chat-body">
-            <div class="msg bot">Hello! I am ShopBot. Ask me about orders, shipping, or vintage items!</div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleChatKey(event)">
-            <button class="btn" onclick="sendMessage()">➤</button>
-        </div>
-    </div>
-
-    <div id="spin-overlay" class="wheel-overlay" style="display:none;">
-        <div class="wheel-container">
-            <span class="close-wheel" onclick="closeWheel()">✕</span>
-            <h2 style="font-family:'Playfair Display'; color:var(--primary-dark); margin-bottom:5px;">Lucky Spin!</h2>
-            <p style="color:#666; margin-bottom:20px; font-size:0.9rem;">Spin to win exclusive coupons.</p>
-            
-            <div style="position:relative; display:inline-block;">
-                <div class="wheel-pointer"></div>
-                
-                <div class="the-wheel" id="the-wheel">
-                    <div class="wheel-text item-1"><span style="--r: 30deg;">20% OFF<br><small>Vintage</small></span></div>
-                    <div class="wheel-text item-2"><span style="--r: 90deg;">Free<br>Ship</span></div>
-                    <div class="wheel-text item-3"><span style="--r: 150deg;">Try<br>Again</span></div>
-                    <div class="wheel-text item-4"><span style="--r: 210deg;">Mystery<br>Box</span></div>
-                    <div class="wheel-text item-5"><span style="--r: 270deg;">10% OFF<br><small>All Items</small></span></div>
-                    <div class="wheel-text item-6"><span style="--r: 330deg;">5% OFF<br><small>Welcome</small></span></div>
-                </div>
-
-                <button class="spin-btn-center" onclick="spinWheel()">SPIN</button>
-            </div>
-
-            <div class="prize-msg" id="prize-msg"></div>
-        </div>
-    </div>
-
-    <script>
-        // --- FORCE SHOW WHEEL FOR TESTING ---
-        // I removed the sessionStorage check so you can test it immediately
-        setTimeout(() => { 
-            document.getElementById('spin-overlay').style.display = 'flex'; 
-        }, 1000);
-
-        function closeWheel() {
-            document.getElementById('spin-overlay').style.display = 'none';
+        // --- SPIN WHEEL (Trigger on Login) ---
+        if (localStorage.getItem('showSpinWheel') === 'true') {
+            setTimeout(() => { document.getElementById('spin-overlay').style.display = 'flex'; }, 1500);
+            localStorage.removeItem('showSpinWheel');
         }
 
+        function closeWheel() { document.getElementById('spin-overlay').style.display = 'none'; }
+        
         let isSpinning = false;
-
         function spinWheel() {
             if (isSpinning) return;
             isSpinning = true;
-
             const wheel = document.getElementById('the-wheel');
             const msg = document.getElementById('prize-msg');
             msg.innerText = "Spinning...";
-
-            // Calculate Random Degree
-            // 1. Spin at least 5 times (1800deg)
-            // 2. Add random (0-360)
             const randomDeg = Math.floor(1800 + Math.random() * 360); 
-            
-            wheel.style.transform = `rotate(-${randomDeg}deg)`; // Negative for Clockwise
+            wheel.style.transform = `rotate(-${randomDeg}deg)`; 
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 const actualDeg = randomDeg % 360;
-                let prize = "";
+                let prize = "", code = "", desc = "";
 
-                // Simple Logic based on Top Position (0deg)
-                if (actualDeg >= 0 && actualDeg < 60) prize = "20% OFF (Code: VINTAGE20)";
-                else if (actualDeg >= 60 && actualDeg < 120) prize = "Free Shipping (Code: FREESHIP)";
-                else if (actualDeg >= 120 && actualDeg < 180) prize = "Better Luck Next Time";
-                else if (actualDeg >= 180 && actualDeg < 240) prize = "Mystery Gift!";
-                else if (actualDeg >= 240 && actualDeg < 300) prize = "10% OFF (Code: SAVE10)";
-                else if (actualDeg >= 300 && actualDeg < 360) prize = "5% OFF (Code: HELLO5)";
+                if (actualDeg >= 0 && actualDeg < 60) { prize = "20% OFF"; code = "VINTAGE20"; desc = "20% Off Vintage Items"; }
+                else if (actualDeg >= 60 && actualDeg < 120) { prize = "Free Shipping"; code = "FREESHIP"; desc = "Free Shipping on next order"; }
+                else if (actualDeg >= 120 && actualDeg < 180) { prize = "Better Luck Next Time"; }
+                else if (actualDeg >= 180 && actualDeg < 240) { prize = "Mystery Gift!"; code = "MYSTERY"; desc = "Free Mystery Item"; }
+                else if (actualDeg >= 240 && actualDeg < 300) { prize = "10% OFF"; code = "SAVE10"; desc = "10% Off Entire Order"; }
+                else if (actualDeg >= 300 && actualDeg < 360) { prize = "5% OFF"; code = "HELLO5"; desc = "5% Welcome Discount"; }
 
                 msg.innerHTML = `🎉 Won: <span style="color:var(--accent-orange)">${prize}</span>`;
+                // ... inside setTimeout ...
+                msg.innerHTML = `🎉 Won: <span style="color:var(--accent-orange)">${prize}</span>`;
+
+                // FIRE CONFETTI
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
                 
-                setTimeout(closeWheel, 5000); // Auto close
+                // ... save to database ...
+                if(code && getToken()) {
+                    try {
+                        await apiFetch('/coupons/save', { method: 'POST', body: JSON.stringify({ code, description: desc }) });
+                    } catch(e) { console.error(e); }
+                }
+
+                setTimeout(closeWheel, 5000);
             }, 4000);
         }
     </script>

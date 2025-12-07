@@ -42,6 +42,7 @@ const offerController = require('./controllers/offerController');
 const statsController = require('./controllers/statsController');
 const wishlistController = require('./controllers/wishlistController');
 const reviewController = require('./controllers/reviewController');
+const couponController = require('./controllers/couponController');
 // Import Middleware
 const { verifyToken, verifyAdmin } = require('./middleware/authMiddleware');
 const upload = require('./middleware/uploadMiddleware');
@@ -49,10 +50,18 @@ const upload = require('./middleware/uploadMiddleware');
 // 1. Auth Routes (Standard Password Login)
 router.post('/auth/signup', authController.signup);
 router.post('/auth/login', authController.login);
+router.post('/auth/otp/request', authController.requestLoginOtp);
+router.post('/auth/otp/verify', authController.verifyLoginOtp);
 router.get('/auth/profile', verifyToken, authController.getProfile);
 router.put('/auth/profile', verifyToken, upload.single('dp'), authController.updateProfile);
 router.post('/auth/forgot-password', authController.forgotPassword);
 router.put('/auth/change-password', verifyToken, authController.changePassword);
+router.post('/coupons/save', verifyToken, couponController.saveCoupon);
+router.get('/coupons/my', verifyToken, couponController.getMyCoupons);
+router.get('/auth/users', verifyToken, verifyAdmin, authController.getAllUsers);
+router.put('/auth/ban/:id', verifyToken, verifyAdmin, authController.toggleBan);
+router.delete('/auth/users/:id', verifyToken, verifyAdmin, authController.deleteUser);
+router.post('/coupons/validate', verifyToken, couponController.validateCoupon);
 // 2. Product Routes
 router.get('/products', productController.getAllProducts);
 router.get('/products/:id', productController.getProductById);

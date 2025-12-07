@@ -13,7 +13,17 @@
             <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
             <div class="logo-text">Shop<span>Mart</span></div>
         </a>
-        <nav id="nav-actions"></nav>
+
+        <div class="nav-search-wrapper">
+            <div class="search-box-inner">
+                <input type="text" id="search" placeholder="Search items..." autocomplete="off">
+                <span id="mic-btn" onclick="startVoiceSearch()">🎤</span>
+            </div>
+            <div id="search-results" class="search-dropdown"></div>
+        </div>
+
+        <div class="nav-actions" id="nav-actions">
+            </div>
     </header>
 
     <div class="container">
@@ -31,11 +41,13 @@
                     </tr>
                 </thead>
                 <tbody id="cart-items">
-                    </tbody>
+                    <tr><td colspan="5" style="text-align:center; padding:20px;">Loading cart...</td></tr>
+                </tbody>
             </table>
             
             <div style="text-align: right; margin-top: 30px; border-top:2px solid #eee; padding-top:20px;">
                 <h3 style="color:var(--primary-dark);">Total: <span style="color:var(--accent-orange); font-size:1.5rem;">₹<span id="cart-total">0.00</span></span></h3>
+                
                 <button class="btn" style="margin-top:15px; padding:12px 40px;" onclick="proceedToCheckout()">
                     Proceed to Checkout
                 </button>
@@ -64,7 +76,7 @@
                 <h4>Support</h4>
                 <a href="#">Help Center</a>
                 <a href="#">Shipping Info</a>
-                <a href="#">Returns & Exchange</a>
+                <a href="#">Returns</a>
             </div>
             <div class="footer-col">
                 <h4>Contact Us</h4>
@@ -87,7 +99,12 @@
 
     <script src="js/app.js"></script>
     <script>
-        loadCartPage();
+        // Ensure cart logic runs
+        if(typeof loadCartPage === 'function') {
+            loadCartPage();
+        } else {
+            console.error("loadCartPage function missing in app.js");
+        }
     </script>
 </body>
 </html>
