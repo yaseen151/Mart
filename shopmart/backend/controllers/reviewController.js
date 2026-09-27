@@ -3,7 +3,7 @@ const db = require('../config/db');
 // 1. Add a Review
 exports.addReview = async (req, res) => {
     const { product_id, rating, comment } = req.body;
-    const user_id = req.userId;
+    const user_id = req.user.id;
 
     try {
         await db.execute(

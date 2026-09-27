@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Password | ShopMart</title>
+    <link rel="stylesheet" href="css/style.css"> 
+    <style>
+        body {
+            background: #f4f4f4;
+            display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; margin: 0;
+        }
+        .card {
+            background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        h2 { color: #2d1b69; margin-top: 0; margin-bottom: 20px; }
+        
+        /* Inputs */
+        input {
+            width: 100%; padding: 14px; margin: 10px 0; 
+            border: 1px solid #ccc; border-radius: 8px; 
+            box-sizing: border-box; font-size: 16px;
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold;
+            background: #2d1b69; color: white; margin-top: 15px; transition: 0.3s;
+        }
+        .btn-primary:hover { background: #4a2b99; }
+        .btn-primary:disabled { background: #ccc; }
+
+        .back-link { display: block; margin-top: 20px; color: #666; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="page-title">Forgot Password</h2>
+        
+        <div id="form-container">
+            <p style="color:#666; margin-bottom:15px;">Enter your email to receive a One-Time Password (OTP).</p>
+            <input type="email" id="email" placeholder="Enter your email address">
+            <button type="button" class="btn-primary" id="otp-btn" onclick="sendOtp()">Send OTP Code</button>
+        </div>
+
+        <p id="status-msg" style="margin-top:15px; font-size:14px; display:none;"></p>
+        
+        <a href="login.html" class="back-link">Back to Login</a>
+    </div>
+
+    <script>
+        // Store email globally so we can use it in Step 2
+        let userEmail = "";
+
+        // 1. SEND OTP FUNCTION
+        async function sendOtp() {
+            const emailInput = document.getElementById('email');
+            const btn = document.getElementById('otp-btn');
+            const msg = document.getElementById('status-msg');
+
+            const email = emailInput.value.trim();
+            if(!email) {
+                alert("Please enter your email.");
+                return;
+            }
+
+            // Show Loading
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+            msg.style.display = 'none';
+
+            try {
+                // Call Backend
+                const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await res.json();
+
+                if(res.ok) {
+                    // === THE MAGIC SWAP ===
+                    userEmail = email; // Save email
+                    
+                    // Replace the HTML content of the container
+                    const container = document.getElementById('form-container');
+                    document.getElementById('page-title').innerText = "Reset Password";
+                    
+                    container.innerHTML = `
+                        <div style="background:#e6fffa; color:#047857; padding:10px; border-radius:5px; margin-bottom:15px;">
+                            ✅ OTP Sent to <strong>${email}</strong>
+                        </div>
+                        <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" style="text-align:center; letter-spacing:5px; font-size:18px;">
+                        <input type="password" id="new-password" placeholder="New Password">
+                        <button type="button" class="btn-primary" style="background:#059669;" onclick="resetPassword()">Change Password</button>
+                    `;
+
+                } else {
+                    // Error Handling
+                    alert("Error: " + data.message);
+                    btn.innerText = "Send OTP Code";
+                    btn.disabled = false;
+                }
+
+            } catch(e) {
+                console.error(e);
+                alert("Network Error: Is the server running?");
+                btn.innerText = "Send OTP Code";
+                btn.disabled = false;
+            }
+        }
+
+        // 2. RESET PASSWORD FUNCTION (Injected dynamically)
+        async function resetPassword() {
+            // Get values from the NEW inputs we just created
+            const otp = document.getElementById('otp').value.trim();
+            const pass = document.getElementById('new-password').value.trim();
+
+            if(!otp || !pass) {
+                alert("Please enter the OTP and a new password.");
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:5000/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, otp: otp, newPassword: pass })
+                });
+
+                const data = await res.json();
+
+                if(res.ok) {
+                    // Success!
+                    document.getElementById('form-container').innerHTML = `
+                        <div style="text-align:center;">
+                            <h1 style="font-size:50px;">🎉</h1>
+                            <h3 style="color:#2d1b69;">Password Changed!</h3>
+                            <p>You can now login with your new password.</p>
+                            <button class="btn-primary" onclick="window.location.href='login.html'">Go to Login</button>
+                        </div>
+                    `;
+                    document.querySelector('.back-link').style.display = 'none';
+                } else {
+                    alert("Failed: " + data.message);
+                }
+
+            } catch(e) {
+                alert("Server error during reset.");
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -3,7 +3,7 @@ const db = require('../config/db');
 // 1. User makes an offer
 exports.makeOffer = async (req, res) => {
     const { product_id, offer_price } = req.body;
-    const userId = req.userId;
+    const userId = req.user.id;
 
     try {
         await db.execute(
@@ -60,7 +60,7 @@ exports.getMyOffers = async (req, res) => {
             WHERE offers.user_id = ?
             ORDER BY offers.created_at DESC
         `;
-        const [offers] = await db.execute(sql, [req.userId]);
+        const [offers] = await db.execute(sql, [req.user.id]);
         res.json(offers);
     } catch (err) {
         res.status(500).json({ message: 'Error fetching your offers' });

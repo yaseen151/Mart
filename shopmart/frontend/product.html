@@ -6,6 +6,14 @@
     <title>Product Details</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        :root {
+            --primary-dark: #023E36;
+            --accent-orange: #E67E22;
+            --card-white: #ffffff;
+            --input-bg: #f4f4f4;
+            --border-color: #ddd;
+        }
+
         /* Product Page Layout */
         .product-detail {
             display: flex; gap: 3rem; background: var(--card-white); padding: 3rem;
@@ -19,7 +27,7 @@
         .desc { line-height: 1.8; color: #666; margin-bottom: 2rem; font-size: 1.05rem; }
 
         /* --- REVIEWS SECTION --- */
-        .reviews-container { margin-top: 4rem; background: var(--card-white); padding: 30px; border-radius: 20px; box-shadow: var(--shadow); }
+        .reviews-container { margin-top: 4rem; background: var(--card-white); padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .review-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
         .review-card { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee; }
         .stars { color: gold; font-size: 1.2rem; }
@@ -29,6 +37,11 @@
         .rating-select { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .star-btn { font-size: 1.5rem; cursor: pointer; color: #ccc; transition: 0.2s; }
         .star-btn.active { color: gold; }
+
+        /* Related Grid */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); padding: 15px; transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); }
 
         @media (max-width: 768px) { .product-detail { flex-direction: column; padding: 1.5rem; } }
     </style>
@@ -73,7 +86,7 @@
         </div>
 
         <div style="margin-top: 4rem;">
-            <h2 class="section-title">You Might Also Like</h2>
+            <h2 class="section-title" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary-dark);">You Might Also Like</h2>
             <div id="related-grid" class="product-grid"><p style="color:#777;">Loading...</p></div>
         </div>
     </div>
@@ -95,28 +108,50 @@
         let selectedRating = 0;
 
         async function loadProductDetail() {
+            window.scrollTo(0,0); // Scroll to top on load
             const params = new URLSearchParams(window.location.search);
             currentProductId = params.get('id');
             if (!currentProductId) { window.location.href = 'index.html'; return; }
 
             const res = await apiFetch(`/products/${currentProductId}`);
-            if (!res.ok) { document.getElementById('detail-container').innerHTML = '<h2>Product not found</h2>'; return; }
+            if (!res.ok) { document.getElementById('detail-container').innerHTML = '<h2 style="text-align:center; margin-top:5rem;">Product not found 🚫</h2>'; return; }
             const p = await res.json();
             
-            let imgSrc = p.image.startsWith('http') ? p.image : `/uploads/${p.image}`;
+            // ✅ FIX: Use getImgPath() to link to backend (Port 5000) instead of frontend (Port 5500)
+            const imgSrc = getImgPath(p.image);
+            const safeTitle = p.title ? p.title.replace(/'/g, "\\'") : 'Product';
+
+            // ✅ ADD: Discount Logic
+            let priceDisplay = `₹${p.price}`;
+            let discountBadge = '';
+            
+            if (p.mrp && p.mrp > p.price) {
+                const off = Math.round(((p.mrp - p.price) / p.mrp) * 100);
+                priceDisplay = `
+                    <span style="font-size:2.5rem; color:var(--accent-orange); font-weight:bold;">₹${p.price}</span>
+                    <span style="text-decoration: line-through; color:#999; font-size:1.5rem; margin-left:10px;">₹${Math.round(p.mrp)}</span>
+                    <span style="color:green; font-size:1.2rem; margin-left:10px; font-weight:bold;">${off}% OFF</span>
+                `;
+            }
 
             document.getElementById('detail-container').innerHTML = `
                 <div class="product-detail">
-                    <div class="product-img"><img src="${imgSrc}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/500'"></div>
+                    <div class="product-img">
+                        <img src="${imgSrc}" alt="${p.title}" 
+                             onerror="this.src='https://placehold.co/500x500?text=Product'">
+                    </div>
                     <div class="product-info">
                         <h1>${p.title}</h1>
                         <p style="color:#888; font-size:0.9rem; text-transform:uppercase;">${p.category || 'Vintage'}</p>
-                        <div class="price">₹${p.price}</div>
-                        <p class="desc">${p.description || 'No description.'}</p>
+                        
+                        <div class="price">${priceDisplay}</div>
+                        
+                        <p class="desc">${p.description || 'No description available for this item.'}</p>
+                        
                         <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                            <button class="btn" style="flex:1; background:#023E36;" onclick="buyNow(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Buy Now</button>
-                            <button class="btn" style="flex:1;" onclick="addToCart(${p.id}, '${p.title}', ${p.price}, '${p.image}')">Add to Cart</button>
-                            <button class="btn" style="flex:1; background:transparent; border:2px solid var(--accent-orange); color:var(--accent-orange);" onclick="makeOffer(${p.id}, '${p.title}')">Make Offer</button>
+                            <button class="btn" style="flex:1; background:#023E36;" onclick="buyNow(${p.id}, '${safeTitle}', ${p.price}, '${p.image}')">Buy Now</button>
+                            <button class="btn" style="flex:1;" onclick="addToCart(${p.id}, '${safeTitle}', ${p.price}, '${p.image}')">Add to Cart</button>
+                            <button class="btn" style="flex:1; background:transparent; border:2px solid var(--accent-orange); color:var(--accent-orange);" onclick="makeOffer(${p.id}, '${safeTitle}')">Make Offer</button>
                         </div>
                     </div>
                 </div>
@@ -168,7 +203,6 @@
                 return;
             }
 
-            // Calculate Average
             const totalStars = reviews.reduce((acc, r) => acc + r.rating, 0);
             const avg = (totalStars / reviews.length).toFixed(1);
             avgContainer.innerHTML = `⭐ ${avg} <span style="font-size:0.9rem; color:#666;">(${reviews.length} Reviews)</span>`;
@@ -188,14 +222,24 @@
         // --- RELATED PRODUCTS ---
         async function loadRelatedProducts(category, currentId) {
             if(!category) category = 'General';
-            const res = await apiFetch(`/products?category=${category}`);
+            const res = await apiFetch(`/products?category=${encodeURIComponent(category)}`);
             const allProducts = await res.json();
-            const related = allProducts.filter(item => item.id !== currentId).slice(0, 4);
+            const related = allProducts.filter(item => item.id != currentId).slice(0, 4);
+            
             const container = document.getElementById('related-grid');
             if (related.length === 0) { container.innerHTML = '<p style="color:#777;">No related products.</p>'; return; }
+            
             container.innerHTML = related.map(p => {
-                let img = p.image.startsWith('http') ? p.image : `/uploads/${p.image}`;
-                return `<div class="card" onclick="window.location.href='product.html?id=${p.id}'" style="cursor:pointer;"><img src="${img}" class="product-img-fix"><div class="card-body"><h4 class="card-title" style="font-size:1rem;">${p.title}</h4><p class="card-price" style="font-size:1.1rem;">₹${p.price}</p></div></div>`;
+                // ✅ FIX: Use getImgPath here too for related items
+                const img = getImgPath(p.image);
+                return `
+                <div class="card" onclick="window.location.href='product.html?id=${p.id}'" style="cursor:pointer;">
+                    <img src="${img}" style="width:100%; height:150px; object-fit:contain; border-radius:10px; margin-bottom:10px;">
+                    <div class="card-body">
+                        <h4 class="card-title" style="font-size:1rem;">${p.title}</h4>
+                        <p class="card-price" style="font-size:1.1rem; color:var(--accent-orange); font-weight:bold;">₹${p.price}</p>
+                    </div>
+                </div>`;
             }).join('');
         }
 

@@ -45,11 +45,31 @@ async function apiFetch(endpoint, options = {}) {
     }
 }
 
+// ✅ FIXED: Cache-Buster Version (Forces new images)
 function getImgPath(image) {
-    if (!image) return 'https://via.placeholder.com/300?text=No+Image';
+    if (!image || image === 'undefined' || image === 'null') {
+        return 'https://placehold.co/300x300?text=ShopMart';
+    }
+
+    // If it is an online link, use it
     if (image.startsWith('http')) return image;
-    return `/uploads/${image}`;
+
+    // Clean the name
+    let cleanImage = image.trim();
+
+    // 🚀 THE TRICK: Add "?v=..." to force the browser to reload the image
+    return `http://localhost:5000/uploads/${cleanImage}?v=${new Date().getTime()}`;
 }
+
+// ❌ DISABLED GLOBAL ERROR HANDLER (To prevent flickering)
+/*
+document.addEventListener('error', function(e) {
+    if (e.target.tagName.toLowerCase() === 'img') {
+        e.target.src = 'https://placehold.co/300x300?text=Product';
+        e.target.alt = 'Image fallback';
+    }
+}, true);
+*/
 
 // ==============================================
 // 4. INITIALIZATION
@@ -67,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Init Features
     if(typeof loadWishlistState === 'function') loadWishlistState();
+    if(typeof loadProducts === 'function') loadProducts(); // Explicitly call loadProducts
     initLiveSearch();
     updateCartCount();
     
@@ -88,11 +109,11 @@ function setupNavbar() {
     const isDark = document.body.classList.contains('dark-mode');
     const themeIcon = isDark ? '☀️' : '🌙';
     
-    const themeBtn = `<button id="theme-toggle-btn" class="theme-btn" onclick="toggleTheme()" title="Toggle Dark Mode">${themeIcon}</button>`;
+    const themeBtn = `<button id="theme-toggle-btn" class="theme-btn" onclick="toggleTheme()" title="Toggle Dark Mode" style="background:none; border:none; font-size:1.2rem; cursor:pointer; margin-right:10px; color:#fff;">${themeIcon}</button>`;
     
     // FULL LANGUAGE DROPDOWN
     const langHTML = `
-        <select id="lang-selector" onchange="changeLanguage(this.value)" style="padding:5px; border-radius:5px; border:none; margin-right:10px; cursor:pointer; max-width:80px;">
+        <select id="lang-selector" onchange="changeLanguage(this.value)" style="padding:5px; border-radius:5px; border:none; margin-right:10px; cursor:pointer; max-width:80px; background:#f4f4f4; color:#333; font-weight:bold;">
             <option value="en">🇺🇸 En</option>
             <option value="hi">🇮🇳 Hi</option>
             <option value="kn">🇮🇳 Kn</option>
@@ -108,24 +129,43 @@ function setupNavbar() {
         const count = cart.reduce((acc, item) => acc + item.qty, 0);
 
         if (user) {
-            let adminLink = user.isAdmin ? `<a href="admin.html" style="color:var(--accent-orange);" data-lang="admin">Admin</a>` : '';
-            let dpSrc = user.dp ? `/uploads/${user.dp}` : 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+            let adminLink = user.isAdmin ? `<a href="admin.html" style="color:#e67e22; font-weight:bold; margin-right:15px;" data-lang="admin">Admin</a>` : '';
+            let dpSrc = user.dp ? getImgPath(user.dp) : 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
             
             navContainer.innerHTML = `
                 ${langHTML} ${themeBtn} ${adminLink}
-                <a href="cart.html" id="cart-link" data-lang="cart">Cart (${count})</a>
-                <a href="profile.html" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
-                    <img src="${dpSrc}" class="nav-profile-img" alt="Profile" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1077/1077114.png'">
-                    <span style="color:white; font-size:0.9rem;">${user.name.split(' ')[0]}</span>
+                
+                <a href="index.html" class="nav-link" style="text-decoration:none; color:#ffffff; font-weight:600; margin-right:15px; display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-home" style="color:#ffffff;"></i> Home
                 </a>
-                <a href="#" onclick="logout()" style="font-size:0.85rem; opacity:0.8;" data-lang="logout">Logout</a>
+                
+                <a href="contact.html" class="nav-link" style="text-decoration:none; color:#e67e22; font-weight:600; margin-right:15px; display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-envelope" style="color:#e67e22;"></i> Contact
+                </a>
+
+                <a href="cart.html" id="cart-link" data-lang="cart" style="margin-right:15px; text-decoration:none; color:#ffffff; font-weight:600;">Cart (${count})</a>
+                
+                <a href="profile.html" style="display:flex; align-items:center; gap:10px; text-decoration:none; margin-right:15px;">
+                    <img src="${dpSrc}" class="nav-profile-img" alt="Profile" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1077/1077114.png'" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid #ccc;">
+                    <span style="font-size:0.9rem; font-weight:bold; color:#ffffff;">${user.name.split(' ')[0]}</span>
+                </a>
+                
+                <a href="#" onclick="logout()" style="font-size:0.85rem; opacity:0.9; text-decoration:none; color:#ffffff;" data-lang="logout">Logout</a>
             `;
         } else {
             navContainer.innerHTML = `
                 ${langHTML} ${themeBtn} 
-                <a href="cart.html" id="cart-link" data-lang="cart">Cart (${count})</a>
-                <a href="login.html" data-lang="login">Login</a>
-                <a href="login.html" class="btn" style="padding:8px 20px; font-size:0.9rem; color:white;" data-lang="signup">Signup</a>
+                
+                <a href="index.html" class="nav-link" style="text-decoration:none; color:#ffffff; font-weight:600; margin-right:15px; display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-home" style="color:#ffffff;"></i> Home
+                </a>
+                <a href="contact.html" class="nav-link" style="text-decoration:none; color:#e67e22; font-weight:600; margin-right:15px; display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-envelope" style="color:#e67e22;"></i> Contact
+                </a>
+
+                <a href="cart.html" id="cart-link" data-lang="cart" style="margin-right:15px; text-decoration:none; color:#ffffff; font-weight:600;">Cart (${count})</a>
+                <a href="login.html" data-lang="login" style="margin-right:10px; text-decoration:none; color:#ffffff; font-weight:600;">Login</a>
+                <a href="login.html" class="btn" style="padding:8px 20px; font-size:0.9rem; color:white; text-decoration:none; background-color:#e67e22; border-radius:5px;" data-lang="signup">Signup</a>
             `;
         }
         const sel = document.getElementById('lang-selector');
@@ -141,8 +181,6 @@ function changeLanguage(lang) {
     });
     const searchInput = document.getElementById('search');
     if(searchInput && translations[lang]) searchInput.placeholder = translations[lang].search_placeholder;
-    
-    // IMPORTANT: Update navbar count AFTER changing text
     updateNavbarText(lang);
 }
 
@@ -152,7 +190,6 @@ function updateNavbarText(lang) {
     
     const cartLink = document.getElementById('cart-link');
     if(cartLink) {
-        // FIX: Get count directly from Storage, not DOM
         const cart = JSON.parse(localStorage.getItem('shopmart_cart')) || [];
         const count = cart.reduce((acc, item) => acc + item.qty, 0);
         cartLink.innerText = `${t.cart} (${count})`;
@@ -230,7 +267,6 @@ function updateCartCount() {
     const count = cart.reduce((acc, i) => acc + i.qty, 0);
     const link = document.getElementById('cart-link');
     
-    // Always respect current language
     const currentLang = localStorage.getItem('language') || 'en';
     const label = translations[currentLang].cart;
     
@@ -345,33 +381,155 @@ function startVoiceSearch() {
 }
 
 // Chatbot
-function toggleChat() { 
-    const chat = document.getElementById('chat-window');
-    if(chat) chat.classList.toggle('active');
-}
-function handleChatKey(e) { if (e.key === 'Enter') sendMessage(); }
-function sendMessage() {
+async function sendMessage() {
     const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-    addMessage(text, 'user');
-    input.value = '';
-    setTimeout(() => addMessage(getBotResponse(text.toLowerCase()), 'bot'), 600);
-}
-function addMessage(text, sender) {
-    const body = document.getElementById('chat-body');
-    const div = document.createElement('div');
-    div.className = `msg ${sender}`;
-    div.innerText = text;
-    body.appendChild(div);
-    body.scrollTop = body.scrollHeight;
-}
-function getBotResponse(input) {
-    if (input.includes('hello')) return "Hello! How can I help?";
-    if (input.includes('order')) return "Track orders in Profile.";
-    return "I can help with orders & shipping.";
+    const msgBox = document.getElementById('chat-messages');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    // 1. Add User Message to UI
+    addMessageToUI("You", message, "user-msg");
+    input.value = ""; 
+
+    try {
+        // 2. Send to Smart Backend
+        const token = localStorage.getItem('token');
+        if (!token) {
+            addMessageToUI("Bot", "Please login to chat with me! 🔒", "bot-msg");
+            return;
+        }
+
+        const res = await fetch('http://localhost:5000/api/chat', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ message })
+        });
+
+        // 3. SECURITY CHECK: HANDLE SESSION EXPIRED
+        if (res.status === 401 || res.status === 403) {
+            addMessageToUI("Bot", "Session expired. Please <a href='login.html' style='color:blue;'>Login again</a>.", "bot-msg");
+            localStorage.removeItem('token'); // Clear bad token
+            return;
+        }
+
+        const data = await res.json();
+        addMessageToUI("Bot", data.reply, "bot-msg");
+
+    } catch (err) {
+        addMessageToUI("Bot", "Network Error. Is the server running?", "bot-msg");
+    }
 }
 
-function handleVisualSearch(event) {
-    if (typeof ColorThief === 'undefined') return;
+// Helper function to append HTML
+function addMessageToUI(sender, text, className) {
+    const msgBox = document.getElementById('chat-messages');
+    if (!msgBox) return;
+    const div = document.createElement('div');
+    div.className = `message ${className}`; 
+    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    
+    div.style.marginBottom = "10px";
+    div.style.padding = "10px";
+    div.style.borderRadius = "8px";
+    div.style.maxWidth = "85%";
+    
+    if (className === 'bot-msg') {
+        div.style.background = "#f1f1f1";
+        div.style.alignSelf = "flex-start";
+        div.style.color = "#333";
+    } else {
+        div.style.background = "#2d1b69";
+        div.style.alignSelf = "flex-end";
+        div.style.color = "white";
+    }
+    
+    msgBox.appendChild(div);
+    msgBox.scrollTop = msgBox.scrollHeight;
+}
+
+// ==============================================
+// 8. LOAD PRODUCTS (WITH FLIPKART STYLE OFFERS)
+// ==============================================
+async function loadProducts() {
+    const grid = document.getElementById('product-grid');
+    if (!grid) return; // Only run on pages with a product grid
+
+    grid.innerHTML = '<p style="text-align:center; width:100%;">Loading products...</p>';
+
+    try {
+        // Fetch products from the backend
+        const res = await apiFetch('/products');
+        if (!res.ok) throw new Error("Failed to load");
+
+        const products = await res.json();
+        
+        // Clear the loading message
+        grid.innerHTML = '';
+
+        // Loop through products and create cards
+        products.forEach(product => {
+            // ✅ USE THE SMART IMAGE PATH (Now with cache busting)
+            const imgSrc = getImgPath(product.image);
+
+            // --- 🧮 DISCOUNT MATH (Flipkart Style) ---
+            // If MRP exists and is higher than price, calculate discount
+            let discountBadge = '';
+            let priceDisplay = `₹${product.price}`;
+            
+            if (product.mrp && product.mrp > product.price) {
+                const off = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+                
+                // Strike-through price + Green % off
+                priceDisplay = `
+                    <span style="font-size:1.1rem; font-weight:bold;">₹${product.price}</span>
+                    <span style="text-decoration: line-through; color:#878787; font-size:0.9rem; margin-left:5px;">₹${Math.round(product.mrp)}</span>
+                    <span style="color:#388e3c; font-weight:bold; font-size:0.9rem; margin-left:5px;">${off}% off</span>
+                `;
+                
+                // Green Badge on top of image
+                discountBadge = `<span style="position:absolute; top:10px; left:10px; background:#388e3c; color:white; padding:2px 8px; font-size:0.75rem; border-radius:4px; font-weight:bold;">${off}% OFF</span>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.position = 'relative'; // Important for the badge
+
+            card.innerHTML = `
+                <div style="position:relative; overflow:hidden;">
+                    ${discountBadge}
+                    <img src="${imgSrc}" class="card-img-top" alt="${product.title}" 
+                        style="height:200px; object-fit:contain; padding:10px; transition:transform 0.3s;"
+                        onerror="this.src='https://placehold.co/300x300?text=Product'">
+                    <button class="wishlist-btn" data-id="${product.id}" onclick="toggleWishlist(this, ${product.id})">🤍</button>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title" style="font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${product.title}</h5>
+                    
+                    <div class="card-price" style="margin-bottom:10px;">
+                        ${priceDisplay}
+                    </div>
+
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn" style="flex:1; font-size:0.8rem;" onclick="addToCart(${product.id}, '${product.title}', ${product.price}, '${product.image}')">Add Cart</button>
+                        <button class="btn" style="flex:1; font-size:0.8rem; background:#fb641b;" onclick="buyNow(${product.id}, '${product.title}', ${product.price}, '${product.image}')">Buy Now</button>
+                    </div>
+                    <div style="text-align:center; margin-top:5px;">
+                         <button class="btn" style="background:none; color:blue; font-size:0.8rem; padding:0;" onclick="makeOffer(${product.id}, '${product.title}')">Make Offer</button>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Re-apply wishlist hearts
+        loadWishlistState();
+
+    } catch (err) {
+        grid.innerHTML = '<p style="text-align:center; color:red;">Failed to load products. Is the server running?</p>';
+        console.error(err);
+    }
 }

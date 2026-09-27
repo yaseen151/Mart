@@ -26,6 +26,11 @@
         .input-box input { width: 100%; padding: 13px 50px 13px 20px; background: #eee; border-radius: 8px; border: none; font-size: 15px; outline: none; transition: all 0.3s ease; }
         .input-box i { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 20px; color: #666; }
         
+        /* LOGIN TABS (Password vs OTP) */
+        .login-tabs { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .login-tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; border: 1px solid #eee; transition: 0.3s; color: #666; }
+        .login-tab.active { background: var(--primary-dark); color: white; border-color: var(--primary-dark); }
+
         /* TORCH EFFECT */
         .torch-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.4rem; transition: all 0.3s ease; opacity: 0.6; filter: grayscale(100%); z-index: 10; }
         .torch-active .torch-btn { opacity: 1; filter: grayscale(0%); transform: translateY(-50%) rotate(-20deg) scale(1.2); text-shadow: 0 0 15px #F49D37; }
@@ -37,7 +42,7 @@
         
         .btn { width: 100%; height: 48px; background: var(--accent-orange); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 5px; transition: 0.3s; }
         .btn:hover { background: #e08e2e; transform: translateY(-2px); }
-        .otp-link { margin-top: 15px; font-size: 0.9rem; cursor: pointer; color: var(--primary-dark); font-weight: bold; text-decoration: underline; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
 
         /* SLIDER OVERLAY */
         .toggle-box { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 100; pointer-events: none; }
@@ -52,6 +57,8 @@
         .container.active .toggle-right { right: 0; transition-delay: 1.2s; }
         .toggle-panel .btn { width: 160px; background: transparent; border: 2px solid #fff; }
         .toggle-panel .btn:hover { background: white; color: var(--primary-dark); }
+
+        .hidden { display: none; }
 
         @media screen and (max-width: 650px) {
             .container { height: 100vh; width: 100%; border-radius: 0; }
@@ -73,7 +80,12 @@
         <div class="form-box login">
             <form id="login-form">
                 <h1 id="login-title">Welcome Back</h1>
-                <p style="font-size:0.9rem; margin-bottom:20px; color:#666;">Enter your details to login</p>
+                <p style="font-size:0.9rem; margin-bottom:15px; color:#666;">Login to continue shopping</p>
+
+                <div class="login-tabs">
+                    <div class="login-tab active" onclick="switchLoginMode('password')" id="tab-pass">🔑 Password</div>
+                    <div class="login-tab" onclick="switchLoginMode('otp')" id="tab-otp">📱 OTP</div>
+                </div>
 
                 <div class="input-box">
                     <input type="email" id="login-email" placeholder="Email Address" required />
@@ -81,18 +93,20 @@
                 </div>
 
                 <div class="input-box" id="login-pass-box">
-                    <input type="password" id="login-password" placeholder="Password" required style="padding-right: 45px;" />
+                    <input type="password" id="login-password" placeholder="Password" style="padding-right: 45px;" />
                     <span class="torch-btn" onclick="toggleTorch('login-password', 'login-pass-box')">🔦</span>
                 </div>
 
-                <div class="input-box" id="otp-group" style="display:none;">
-                    <input type="text" id="login-otp" placeholder="Enter OTP Code" />
+                <div class="input-box hidden" id="login-otp-box">
+                    <input type="text" id="login-otp" placeholder="Enter 6-digit Code" maxlength="6" style="letter-spacing: 2px;" />
                     <i class="bx bxs-key"></i>
                 </div>
 
-                <div class="forgot-link"><a href="#" onclick="handleForgotPass()">Forgot Password?</a></div>
-                <button type="submit" class="btn" id="login-btn-text">Login</button>
-                <div class="otp-link" onclick="toggleLoginMode()">Login via OTP</div>
+                <div class="forgot-link" id="forgot-link-box">
+                    <a href="forgot.html">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn" id="login-action-btn">Login</button>
             </form>
         </div>
 
@@ -143,6 +157,7 @@
         const container = document.querySelector(".container");
         const registerBtn = document.querySelector(".register-btn");
         const loginBtn = document.querySelector(".login-btn");
+        
         registerBtn.addEventListener("click", () => { container.classList.add("active"); });
         loginBtn.addEventListener("click", () => { container.classList.remove("active"); });
 
@@ -160,69 +175,111 @@
             return await fetch(`${API_URL}${endpoint}`, config);
         }
 
-        // LOGIN LOGIC (OTP + Password)
-        let isOtpMode = false;
-        function toggleLoginMode() {
-            isOtpMode = !isOtpMode;
-            const passGroup = document.getElementById('login-pass-box');
-            const otpGroup = document.getElementById('otp-group');
-            const btnText = document.getElementById('login-btn-text');
-            const title = document.getElementById('login-title');
+        // --- LOGIN MODE SWITCHING ---
+        let loginMode = 'password'; // 'password' or 'otp'
+        let otpSent = false;
 
-            if (isOtpMode) {
-                passGroup.style.display = 'none'; document.getElementById('login-password').required = false;
-                otpGroup.style.display = 'none'; btnText.innerText = "Send OTP"; title.innerText = "OTP Login";
+        function switchLoginMode(mode) {
+            loginMode = mode;
+            const tabPass = document.getElementById('tab-pass');
+            const tabOtp = document.getElementById('tab-otp');
+            const passBox = document.getElementById('login-pass-box');
+            const otpBox = document.getElementById('login-otp-box');
+            const forgotLink = document.getElementById('forgot-link-box');
+            const btn = document.getElementById('login-action-btn');
+
+            if (mode === 'password') {
+                tabPass.classList.add('active'); tabOtp.classList.remove('active');
+                passBox.classList.remove('hidden'); otpBox.classList.add('hidden');
+                forgotLink.style.display = 'block';
+                btn.innerText = "Login";
+                document.getElementById('login-password').required = true;
+                document.getElementById('login-otp').required = false;
             } else {
-                passGroup.style.display = 'block'; document.getElementById('login-password').required = true;
-                otpGroup.style.display = 'none'; btnText.innerText = "Login"; title.innerText = "Welcome Back";
+                tabOtp.classList.add('active'); tabPass.classList.remove('active');
+                passBox.classList.add('hidden'); 
+                // Only show OTP box if sent, otherwise hidden
+                if(otpSent) otpBox.classList.remove('hidden'); 
+                forgotLink.style.display = 'none';
+                btn.innerText = otpSent ? "Verify & Login" : "Get OTP Code";
+                document.getElementById('login-password').required = false;
             }
         }
 
+        // --- HANDLE LOGIN SUBMIT ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const otpInput = document.getElementById('login-otp');
-            const btnText = document.getElementById('login-btn-text');
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const otp = document.getElementById('login-otp').value.trim();
+            const btn = document.getElementById('login-action-btn');
 
-            if (isOtpMode) {
-                if (btnText.innerText === "Send OTP") {
-                    try {
-                        const res = await apiFetch('/auth/otp/request', { method: 'POST', body: JSON.stringify({ email }) });
-                        const data = await res.json();
-                        if (res.ok) { alert(data.message); btnText.innerText = "Verify & Login"; document.getElementById('otp-group').style.display = 'block'; otpInput.required = true; } 
-                        else { alert(data.message); }
-                    } catch(err) { alert("Network Error"); }
-                } else {
-                    try {
-                        const res = await apiFetch('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ email, otp: otpInput.value }) });
-                        const data = await res.json();
-                        handleLoginSuccess(res, data);
-                    } catch(err) { alert("Network Error"); }
-                }
-            } else {
+            if (loginMode === 'password') {
+                // 1. PASSWORD LOGIN
+                if(!password) return alert("Enter password");
                 try {
+                    btn.innerText = "Logging in...";
                     const res = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
                     const data = await res.json();
-                    handleLoginSuccess(res, data);
-                } catch(err) { alert("Network Error"); }
+                    handleLoginResult(res, data);
+                } catch(err) { alert("Server Error"); }
+                btn.innerText = "Login";
+
+            } else {
+                // 2. OTP LOGIN
+                if (!otpSent) {
+                    // Step A: Request OTP
+                    try {
+                        btn.innerText = "Sending OTP...";
+                        const res = await apiFetch('/auth/otp/request', { method: 'POST', body: JSON.stringify({ email }) });
+                        const data = await res.json();
+                        if (res.ok) {
+                            alert("✅ " + data.message);
+                            otpSent = true;
+                            document.getElementById('login-otp-box').classList.remove('hidden');
+                            document.getElementById('login-otp').required = true;
+                            btn.innerText = "Verify & Login";
+                        } else {
+                            alert(data.message);
+                            btn.innerText = "Get OTP Code";
+                        }
+                    } catch(err) { alert("Network Error"); btn.innerText = "Get OTP Code"; }
+                } else {
+                    // Step B: Verify OTP
+                    if(!otp) return alert("Enter the OTP code");
+                    try {
+                        btn.innerText = "Verifying...";
+                        const res = await apiFetch('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ email, otp }) });
+                        const data = await res.json();
+                        handleLoginResult(res, data);
+                    } catch(err) { alert("Network Error"); }
+                    btn.innerText = "Verify & Login";
+                }
             }
         });
 
-        function handleLoginSuccess(res, data) {
+        function handleLoginResult(res, data) {
             if (res.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                // Trigger Spin Wheel for New Users
+                // Check if new user for wheel spin logic (optional)
                 if (localStorage.getItem('isNewUser') === 'true') {
                     localStorage.setItem('showSpinWheel', 'true'); 
                     localStorage.removeItem('isNewUser'); 
                 }
-                window.location.href = 'index.html';
-            } else { alert(data.message || "Login failed"); }
+                
+                // Redirect based on role
+                if (data.user.isAdmin) {
+                    window.location.href = 'admin.html'; // Or dashboard
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                alert("❌ " + (data.message || "Login failed"));
+            }
         }
 
-        // SIGNUP LOGIC
+        // --- SIGNUP LOGIC (Confetti + Redirect) ---
         function triggerConfetti() {
             var count = 200; var defaults = { origin: { y: 0.7 } };
             function fire(particleRatio, opts) { confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) })); }
@@ -244,23 +301,11 @@
                     setTimeout(() => {
                         alert('Account created! Please Login.');
                         localStorage.setItem('isNewUser', 'true'); 
-                        container.classList.remove("active");
+                        container.classList.remove("active"); // Slide to login
                     }, 1500);
                 } else { alert(data.message || "Signup failed"); }
             } catch (err) { alert("Network Error"); }
         });
-
-        // FORGOT PASSWORD
-        async function handleForgotPass() {
-            const email = prompt("Enter your email for password reset:");
-            if(email) {
-                try {
-                    const res = await apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-                    const data = await res.json();
-                    alert(res.ok ? "✅ " + data.message : "❌ " + data.message);
-                } catch(err) { alert("Network error"); }
-            }
-        }
     </script>
 </body>
 </html>

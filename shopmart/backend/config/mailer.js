@@ -10,7 +10,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 1. Send Professional Invoice
+// ==========================================
+// 1. SEND INVOICE (Professional HTML) 🧾
+// ==========================================
 const sendInvoice = async (userEmail, userName, orderId, total, items, address) => {
     
     // Generate Table Rows for Items
@@ -64,7 +66,7 @@ const sendInvoice = async (userEmail, userName, orderId, total, items, address) 
                 </div>
 
                 <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-                    <p style="margin: 0;">Need help? Contact us at <a href="mailto:me.junaid.in@gmail.com" style="color: #023E36;">me.junaid.in@gmail.com</a></p>
+                    <p style="margin: 0;">Need help? Contact us at <a href="mailto:support@shopmart.com" style="color: #023E36;">support@shopmart.com</a></p>
                     <p style="margin: 10px 0 0;">&copy; 2025 ShopMart Inc. All rights reserved.</p>
                 </div>
             </div>
@@ -75,45 +77,65 @@ const sendInvoice = async (userEmail, userName, orderId, total, items, address) 
         await transporter.sendMail(mailOptions);
         console.log(`✅ Detailed Invoice sent to ${userEmail}`);
     } catch (error) {
-        console.error('❌ Error sending email:', error);
+        console.error('❌ Error sending invoice:', error);
     }
 };
 
-// 2. Send OTP (Keep as is)
-const sendOTP = async (userEmail, otp) => {
+// ==========================================
+// 2. SEND LOGIN OTP 🔑
+// ==========================================
+const sendLoginOTP = async (userEmail, otp) => {
     const mailOptions = {
         from: '"ShopMart Security" <no-reply@shopmart.com>',
         to: userEmail,
         subject: `Your Login Code: ${otp}`,
         html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; border: 1px solid #ddd;">
+            <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; border: 1px solid #ddd; border-radius: 10px;">
                 <h2 style="color: #023E36;">ShopMart Login</h2>
-                <p>Your One-Time Password (OTP) is:</p>
+                <p>Use this code to verify your login:</p>
                 <h1 style="color: #F49D37; letter-spacing: 5px; font-size: 3rem; margin: 10px 0;">${otp}</h1>
-                <p style="color: #666;">This code expires in 10 minutes. Do not share it.</p>
+                <p style="color: #666; font-size: 12px;">This code expires in 10 minutes.</p>
             </div>
         `
     };
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Login OTP sent to ${userEmail}`);
+    } catch (error) {
+        console.error('❌ Error sending Login OTP:', error);
+    }
 };
 
-// 3. Send Password Reset (Keep as is)
-const sendResetEmail = async (userEmail, tempPassword) => {
+// ==========================================
+// 3. SEND PASSWORD RESET OTP 🔒
+// ==========================================
+// This matches the function name used in 'authController.js'
+const sendOtpEmail = async (userEmail, otp) => {
     const mailOptions = {
         from: '"ShopMart Security" <no-reply@shopmart.com>',
         to: userEmail,
-        subject: 'Password Reset Request 🔐',
+        subject: 'Reset Your Password - ShopMart',
         html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 500px;">
-                <h2 style="color: #023E36;">Password Reset</h2>
-                <p>You requested to reset your password.</p>
-                <p>Your new temporary password is:</p>
-                <h1 style="color: #F49D37; letter-spacing: 2px;">${tempPassword}</h1>
-                <p>Please login and change this password immediately.</p>
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 500px; margin: auto;">
+                <h2 style="color: #2d1b69; text-align: center;">Password Reset</h2>
+                <p style="color: #333;">You requested to reset your password. Use the OTP below to proceed.</p>
+                
+                <div style="text-align: center; margin: 25px 0;">
+                    <span style="font-size: 28px; font-weight: bold; background: #f3f4f6; padding: 15px 30px; border-radius: 8px; color: #2d1b69; letter-spacing: 3px;">
+                        ${otp}
+                    </span>
+                </div>
+
+                <p style="color: #666; font-size: 13px;">If you did not request this change, please ignore this email.</p>
             </div>
         `
     };
-    try { await transporter.sendMail(mailOptions); } catch(e) { console.error(e); }
+    try { 
+        await transporter.sendMail(mailOptions); 
+        console.log(`✅ Password Reset OTP sent to ${userEmail}`);
+    } catch(e) { 
+        console.error('❌ Error sending Reset OTP:', e); 
+    }
 };
 
-module.exports = { sendInvoice, sendOTP, sendResetEmail };
+module.exports = { sendInvoice, sendLoginOTP, sendOtpEmail };

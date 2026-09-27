@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | ShopMart</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -27,22 +29,23 @@
         .tree-level { font-size: 4rem; display: block; margin-bottom: 10px; animation: grow 1s ease-out; }
         @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
 
-        /* --- EXISTING STYLES --- */
-        .order-card { background: var(--bg-card); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); position: relative; }
-        .order-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; font-family: 'Playfair Display'; color: var(--primary-dark); font-weight: bold; font-size: 1.2rem; }
+        /* --- ORDER CARDS --- */
+        .order-card { background: var(--bg-card, #fff); border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
+        .order-header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; font-family: 'Playfair Display'; color: #333; font-weight: bold; font-size: 1.2rem; }
         
-        /* Updated Status Badges */
+        /* Status Badges */
         .order-status { padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; border: 1px solid transparent; }
         .status-Processing { background: #fff7ed; color: #ea580c; border-color: #fdba74; }
         .status-Shipped { background: #eff6ff; color: #2563eb; border-color: #93c5fd; }
         .status-Delivered { background: #ecfdf5; color: #059669; border-color: #6ee7b7; }
+        .status-Cancelled { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+        .status-ReturnRequested { background: #fffbeb; color: #d97706; border-color: #fcd34d; }
+        .status-Returned { background: #f0fdf4; color: #16a34a; border-color: #86efac; }
 
         .order-item { display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin: 10px 0; align-items: center; }
-        .order-total { text-align: right; font-weight: bold; color: var(--primary-dark); font-size: 1.3rem; margin-top: 20px; padding-top: 10px; border-top: 2px solid #eee; }
-        .coupon-card { background: #fffdf5; border: 2px dashed var(--accent-orange); padding: 20px; text-align: center; border-radius: 10px; }
-        .coupon-code { background: #eee; padding: 5px 10px; border-radius: 5px; font-family: monospace; font-size: 1.2rem; letter-spacing: 1px; font-weight: bold; color: var(--primary-dark); margin: 10px 0; display: inline-block; }
+        .order-total { text-align: right; font-weight: bold; color: #333; font-size: 1.3rem; margin-top: 20px; padding-top: 10px; border-top: 2px solid #eee; }
         
-        /* --- NEW TRACKING BAR CSS --- */
+        /* --- TRACKING BAR --- */
         .track-container { margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #f1f5f9; }
         .progress-track { display: flex; justify-content: space-between; position: relative; margin-top: 10px; }
         .progress-track::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 4px; background: #e2e8f0; z-index: 0; transform: translateY(-50%); }
@@ -54,9 +57,9 @@
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-box { background: var(--bg-card); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
-        .modal-box input { margin-bottom: 15px; }
-        .modal-box h3 { font-family: 'Playfair Display'; color: var(--primary-dark); margin-bottom: 20px; }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-box input { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .modal-box h3 { font-family: 'Playfair Display'; color: #333; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -69,7 +72,6 @@
     </header>
 
     <div class="container">
-        
         <div class="form-box">
             <h2 style="font-family:'Playfair Display'; color:var(--primary-dark); margin-bottom:20px;">My Profile</h2>
             <div style="text-align:center; margin: 20px 0;">
@@ -125,7 +127,7 @@
         </div>
     </div>
 
-    <footer>
+   <footer>
         <div class="footer-content">
             <div class="footer-col">
                 <a href="#" class="logo" style="margin-bottom:15px;">
@@ -173,11 +175,16 @@
     <script>
         if(!getToken()) window.location.href = 'login.html';
 
-        // --- ECO LOGIC ---
+        // --- 1. ECO LOGIC (Safe) ---
         function calculateEcoImpact(orders) {
+            if (!Array.isArray(orders)) return; // Safety check
+
             let totalItems = 0;
             orders.forEach(o => {
-                const items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.order_items || o.items);
+                // Ignore cancelled orders for eco-score
+                if(o.status === 'Cancelled' || o.status === 'Returned') return;
+
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.order_items || o.items || []);
                 if(items) items.forEach(i => totalItems += i.qty);
             });
 
@@ -213,7 +220,7 @@
             `;
         }
 
-        // --- LOADERS ---
+        // --- 2. LOAD PROFILE ---
         async function loadProfile() {
             try {
                 const res = await apiFetch('/auth/profile');
@@ -226,14 +233,25 @@
             } catch(e) { console.error(e); }
         }
 
-        // --- UPDATED LOAD ORDERS WITH TRACKING ---
+        // --- 3. LOAD ORDERS (Safe & Functional) ---
         async function loadOrders() {
             try {
-                // Fetch from the endpoint that returns user orders
                 const res = await apiFetch('/orders'); 
+                
+                if (res.status === 500) {
+                    throw new Error("Server Error - Database Disconnected?");
+                }
+
                 const orders = await res.json();
                 const container = document.getElementById('order-list');
                 
+                // CRITICAL: Check if orders is actually an array before mapping
+                if (!Array.isArray(orders)) {
+                    console.error("Orders is not an array:", orders);
+                    container.innerHTML = '<p style="text-align:center; color:red;">Could not load orders.</p>';
+                    return;
+                }
+
                 calculateEcoImpact(orders);
 
                 if (orders.length === 0) { 
@@ -242,7 +260,6 @@
                 }
                 
                 container.innerHTML = orders.map(order => {
-                    // Handle JSON parsing safely
                     const items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.order_items || order.items || []);
                     
                     const itemsHtml = items.map(i => `
@@ -255,55 +272,92 @@
                         </div>`
                     ).join('');
 
-                    // Determine Status Step (Logic for Tracking Bar)
+                    // Logic for Status and Buttons
                     const status = order.status || 'Processing';
                     let step = 1;
                     if(status === 'Shipped' || status === 'Out for Delivery') step = 2;
-                    if(status === 'Delivered') step = 3;
+                    if(status === 'Delivered' || status === 'Return Requested' || status === 'Returned') step = 3;
+
+                    let actionBtn = '';
+                    if (status === 'Processing') {
+                        actionBtn = `<button onclick="cancelOrder(${order.id})" style="background:#fee2e2; color:#ef4444; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:10px; width:100%;">Cancel Order 🚫</button>`;
+                    } 
+                    else if (status === 'Delivered') {
+                        actionBtn = `<button onclick="returnOrder(${order.id})" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:10px; width:100%;">Request Return ↩️</button>`;
+                    }
+                    else if (status === 'Cancelled') {
+                        actionBtn = `<p style="color:red; font-weight:bold; margin-top:10px; text-align:center;">🚫 Order Cancelled</p>`;
+                    }
+                    else if (status === 'Return Requested') {
+                        actionBtn = `<p style="color:orange; font-weight:bold; margin-top:10px; text-align:center;">⏳ Return Under Review</p>`;
+                    }
+                    else if (status === 'Returned') {
+                        actionBtn = `<p style="color:green; font-weight:bold; margin-top:10px; text-align:center;">✅ Returned Successfully</p>`;
+                    }
 
                     return `
                     <div class="order-card">
                         <div class="order-header">
                             <span>Order #${order.id}</span>
-                            <span class="order-status status-${status}">${status}</span>
+                            <span class="order-status status-${status.replace(/\s+/g, '')}">${status}</span>
                         </div>
                         
                         <div style="margin-bottom:15px; font-size:0.9rem; color:var(--text-muted);">
                             <strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br>
-                            <strong>To:</strong> ${order.address || order.shipping_address}
+                            <strong>To:</strong> ${order.address || order.shipping_address || 'Address N/A'}
                         </div>
 
+                        ${status !== 'Cancelled' ? `
                         <div class="track-container">
                             <small style="text-transform:uppercase; font-weight:bold; color:#64748b; font-size:0.7rem;">Tracking Status</small>
                             <div class="progress-track">
-                                <div class="step ${step >= 1 ? 'active' : ''}">
-                                    <div class="step-label">Processing</div>
-                                </div>
-                                <div class="step ${step >= 2 ? 'active' : ''}">
-                                    <div class="step-label">Shipped</div>
-                                </div>
-                                <div class="step ${step >= 3 ? 'active' : ''}">
-                                    <div class="step-label">Delivered</div>
-                                </div>
+                                <div class="step ${step >= 1 ? 'active' : ''}"><div class="step-label">Processing</div></div>
+                                <div class="step ${step >= 2 ? 'active' : ''}"><div class="step-label">Shipped</div></div>
+                                <div class="step ${step >= 3 ? 'active' : ''}"><div class="step-label">Delivered</div></div>
                             </div>
-                        </div>
+                        </div>` : ''}
 
                         <div style="background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #eee; margin-top:20px;">
                             ${itemsHtml}
                         </div>
                         <div class="order-total">Total: ₹${Number(order.total_price).toFixed(2)}</div>
+                        
+                        ${actionBtn}
                     </div>`;
                 }).join('');
             } catch(e) { 
-                console.error(e);
-                document.getElementById('order-list').innerHTML = '<p style="text-align:center; color:red">Error loading orders.</p>';
+                console.error("Load Orders Error:", e);
+                document.getElementById('order-list').innerHTML = '<p style="text-align:center; color:red">Error loading orders. Check console.</p>';
             }
+        }
+
+        // --- ACTION FUNCTIONS ---
+        async function cancelOrder(id) {
+            if(!confirm("Are you sure you want to cancel this order?")) return;
+            try {
+                const res = await apiFetch(`/orders/${id}/cancel`, { method: 'PUT' });
+                const data = await res.json();
+                if(res.ok) { alert("✅ " + data.message); loadOrders(); }
+                else { alert("❌ " + data.message); }
+            } catch(e) { alert("Error cancelling order"); }
+        }
+
+        async function returnOrder(id) {
+            if(!confirm("Request a return for this order?")) return;
+            try {
+                const res = await apiFetch(`/orders/${id}/return`, { method: 'PUT' });
+                const data = await res.json();
+                if(res.ok) { alert("✅ " + data.message); loadOrders(); }
+                else { alert("❌ " + data.message); }
+            } catch(e) { alert("Error requesting return"); }
         }
 
         async function loadCoupons() {
             try {
                 const res = await apiFetch('/coupons/my');
                 const coupons = await res.json();
+                // Ensure array before mapping
+                if (!Array.isArray(coupons)) return; 
                 document.getElementById('coupon-list').innerHTML = coupons.length ? coupons.map(c => `<div class="coupon-card"><small style="color:#888; font-size:0.7rem;">CODE</small><div class="coupon-code">${c.code}</div><p style="font-size:0.9rem; margin:0; color:#555;">${c.discount_desc}</p></div>`).join('') : '<p style="text-align:center; grid-column: 1/-1;">No coupons.</p>';
             } catch(e) {}
         }
@@ -312,11 +366,12 @@
             try {
                 const res = await apiFetch('/offers/my');
                 const offers = await res.json();
+                if (!Array.isArray(offers)) return;
                 document.getElementById('my-offers-list').innerHTML = offers.length ? offers.map(o => `<div class="order-card" style="flex-direction:row; justify-content:space-between; padding:15px; display:flex; align-items:center;"><div style="display:flex; align-items:center; gap:15px;"><img src="/uploads/${o.image}" style="width:60px; height:60px; border-radius:10px; object-fit:cover;"><div><h4 style="margin:0;">${o.title}</h4><p style="font-weight:bold; color:var(--accent-orange); margin:0;">Offer: ₹${o.offer_price}</p></div></div><div style="text-align:right; font-weight:bold; color:${o.status==='accepted'?'green':(o.status==='rejected'?'red':'orange')}">${o.status}</div></div>`).join('') : '<p style="text-align:center;">No offers.</p>';
             } catch(e) {}
         }
 
-        // Profile Update
+        // --- SUBMIT HANDLERS ---
         document.getElementById('profile-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData();
@@ -332,9 +387,9 @@
             } catch(e) { alert('Error updating profile'); }
         });
 
-        // Password Update
         function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; }
         function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
+        
         async function submitPasswordChange() {
             const oldPass = document.getElementById('old-pass').value;
             const newPass = document.getElementById('new-pass').value;
@@ -345,6 +400,7 @@
             } catch(e) { alert("Error changing password"); }
         }
 
+        // Initialize Page
         loadProfile();
         loadCoupons();
         loadMyOffers();

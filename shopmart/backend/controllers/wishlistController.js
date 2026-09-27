@@ -3,7 +3,7 @@ const db = require('../config/db');
 // 1. Toggle Wishlist (Add/Remove)
 exports.toggleWishlist = async (req, res) => {
     const { product_id } = req.body;
-    const user_id = req.userId;
+    const user_id = req.user.id;
 
     try {
         // Check if already exists
@@ -28,7 +28,7 @@ exports.toggleWishlist = async (req, res) => {
 
 // 2. Get My Wishlist (With Product Details)
 exports.getMyWishlist = async (req, res) => {
-    const user_id = req.userId;
+    const user_id = req.user.id;
     try {
         const sql = `
             SELECT products.* FROM wishlist 
@@ -45,7 +45,7 @@ exports.getMyWishlist = async (req, res) => {
 
 // 3. Get Array of Wishlisted IDs (To color hearts red on load)
 exports.getWishlistIds = async (req, res) => {
-    const user_id = req.userId;
+    const user_id = req.user.id;
     try {
         const [rows] = await db.execute('SELECT product_id FROM wishlist WHERE user_id = ?', [user_id]);
         const ids = rows.map(row => row.product_id);

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | ShopMart</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* Specific Styles for Contact Page */
+        .contact-container {
+            max-width: 1100px;
+            margin: 50px auto;
+            padding: 20px;
+            display: flex;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .contact-info h2 {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .contact-item i {
+            width: 50px;
+            height: 50px;
+            background: #f4f4f4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e67e22;
+            font-size: 1.2rem;
+        }
+
+        .contact-form-wrapper {
+            flex: 1.5;
+            min-width: 350px;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #e67e22;
+            box-shadow: 0 0 5px rgba(230, 126, 34, 0.2);
+        }
+
+        .send-btn {
+            width: 100%;
+            padding: 15px;
+            background: #2d1b69;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .send-btn:hover { background: #e67e22; }
+
+        .map-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 50px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/1656/1656850.png" class="logo-icon" alt="Logo">
+            <div class="logo-text">Shop<span>Mart</span></div>
+        </a>
+        
+        <div class="nav-actions">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+            <a href="index.html" class="nav-link"><i class="fas fa-store"></i><span>Shop</span></a>
+            <a href="contact.html" class="nav-link" style="color:#e67e22;"><i class="fas fa-envelope"></i><span>Contact</span></a>
+            <a href="cart.html" class="cart-link"><i class="fas fa-shopping-cart"></i><span class="cart-badge" id="cart-count">0</span></a>
+        </div>
+    </header>
+
+    <div class="contact-container">
+        
+        <div class="contact-info">
+            <h2>Get in Touch</h2>
+            <p style="color:#666; margin-bottom:30px; line-height:1.6;">Have questions about our vintage collection? Need help with an order? We are here for you 24/7.</p>
+            
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <strong>Location:</strong><br>
+                    Bangalore, Karnataka, India
+                </div>
+            </div>
+
+            <div class="contact-item">
+                <i class="fas fa-phone-alt"></i>
+                <div>
+                    <strong>Phone:</strong><br>
+                    +91 9353889571
+                </div>
+            </div>
+
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <strong>Email:</strong><br>
+                    me.junaid.in@gmail.com
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-form-wrapper">
+            <h3 style="margin-bottom:20px;">Send us a Message</h3>
+            <form onsubmit="sendMessage(event)">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" placeholder="Your Email" required>
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea rows="5" placeholder="How can we help?" required></textarea>
+                </div>
+                <button type="submit" class="send-btn">Send Message</button>
+            </form>
+        </div>
+
+        <div class="map-container">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.0036660146033!2d77.5945626748413!3d12.971598687343605!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
+                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+            </iframe>
+        </div>
+
+    </div>
+
+       <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <a href="#" class="logo" style="margin-bottom:15px;">
+                    <div class="logo-text">Shop<span>Mart</span></div>
+                </a>
+                <p style="font-size:0.9rem; color:rgba(255,255,255,0.7); line-height:1.6;">Curated vintage aesthetics for the modern world. <br> Sustainable, stylish, and unique.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4><a href="index.html">All Products</a><a href="#">New Arrivals</a><a href="#">Featured</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4><a href="#">Help Center</a><a href="#">Shipping Info</a><a href="#">Returns</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Us</h4>
+                <a href="mailto:me.junaid.in@gmail.com" style="color:var(--accent-orange); font-weight:bold;">✉️ me.junaid.in@gmail.com</a>
+                <a href="#">📞 +91 98765 43210</a>
+                <a href="#">📍 Bangalore, India</a>
+            </div>
+        </div>
+        <div class="footer-bottom">&copy; 2025 ShopMart Inc. | Built by Junaid</div>
+    </footer>
+
+    <script src="js/app.js"></script>
+<script>
+    async function sendContactForm(e) {
+        e.preventDefault(); // Stop page refresh
+        
+        // 1. Get Values
+        const nameInput = document.querySelector('input[placeholder="Your Name"]');
+        const emailInput = document.querySelector('input[placeholder="Your Email"]');
+        const msgInput = document.querySelector('textarea');
+        const btn = document.querySelector('.send-btn');
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const message = msgInput.value.trim();
+
+        if (!name || !email || !message) {
+            alert("Please fill in all fields!");
+            return;
+        }
+
+        // 2. Show Loading State
+        const originalText = btn.innerText;
+        btn.innerText = "Sending... 🚀";
+        btn.disabled = true;
+
+        try {
+            console.log("Sending data:", { name, email, message }); // Debug log
+
+            // 3. Send to Backend
+            const res = await fetch('http://localhost:5000/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, message })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("✅ Success! Check your Inbox (and Spam folder).");
+                nameInput.value = "";
+                emailInput.value = "";
+                msgInput.value = "";
+            } else {
+                alert("❌ Server Error: " + data.message);
+            }
+
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            alert("❌ Network Error. Make sure 'node server.js' is running!");
+        } finally {
+            // 4. Reset Button
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // Attach this function to the form
+    document.querySelector('form').setAttribute('onsubmit', 'sendContactForm(event)');
+</script>
+</body>
+</html>
